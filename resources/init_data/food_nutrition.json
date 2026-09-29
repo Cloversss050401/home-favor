@@ -1,0 +1,122 @@
+[
+  {
+    "food_name": "番茄", "food_category": "蔬菜", "energy": 20.0, "protein": 0.9, "fat": 0.2,
+    "carbohydrate": 4.0, "calcium": 10.0, "iron": 0.4, "zinc": 0.13,
+    "vitamin_a": 0.092, "vitamin_c": 19.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据，可按权威版本替换）"
+  },
+  {
+    "food_name": "鸡蛋", "food_category": "蛋类", "energy": 144.0, "protein": 13.3, "fat": 8.8,
+    "carbohydrate": 2.8, "calcium": 56.0, "iron": 2.0, "zinc": 1.1,
+    "vitamin_a": 0.234, "vitamin_c": 0.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "土豆", "food_category": "薯类", "energy": 77.0, "protein": 2.0, "fat": 0.2,
+    "carbohydrate": 17.2, "calcium": 8.0, "iron": 0.8, "zinc": 0.37,
+    "vitamin_a": 0.005, "vitamin_c": 27.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "油菜", "food_category": "蔬菜", "energy": 25.0, "protein": 1.3, "fat": 0.5,
+    "carbohydrate": 3.9, "calcium": 108.0, "iron": 1.2, "zinc": 0.33,
+    "vitamin_a": 0.103, "vitamin_c": 36.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "鸡胸肉", "food_category": "禽肉", "energy": 133.0, "protein": 19.4, "fat": 5.0,
+    "carbohydrate": 0.5, "calcium": 3.0, "iron": 0.6, "zinc": 0.58,
+    "vitamin_a": 0.016, "vitamin_c": 0.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "白菜", "food_category": "蔬菜", "energy": 18.0, "protein": 1.5, "fat": 0.1,
+    "carbohydrate": 3.2, "calcium": 50.0, "iron": 0.6, "zinc": 0.38,
+    "vitamin_a": 0.02, "vitamin_c": 31.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "豆腐", "food_category": "豆制品", "energy": 82.0, "protein": 8.1, "fat": 3.7,
+    "carbohydrate": 4.2, "calcium": 164.0, "iron": 1.9, "zinc": 0.99,
+    "vitamin_a": 0.005, "vitamin_c": 0.0, "per_amount_g": 100,
+    "remark": "北豆腐，中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "苹果", "food_category": "水果", "energy": 52.0, "protein": 0.2, "fat": 0.2,
+    "carbohydrate": 13.5, "calcium": 4.0, "iron": 0.6, "zinc": 0.19,
+    "vitamin_a": 0.003, "vitamin_c": 4.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "猪肉", "food_category": "畜肉", "energy": 143.0, "protein": 20.3, "fat": 6.2,
+    "carbohydrate": 1.5, "calcium": 6.0, "iron": 3.0, "zinc": 2.99,
+    "vitamin_a": 0.044, "vitamin_c": 0.0, "per_amount_g": 100,
+    "remark": "猪瘦肉，中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "大米", "food_category": "谷类", "energy": 346.0, "protein": 7.4, "fat": 0.8,
+    "carbohydrate": 77.9, "calcium": 13.0, "iron": 2.3, "zinc": 1.7,
+    "vitamin_a": 0.0, "vitamin_c": 0.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "面粉", "food_category": "谷类", "energy": 352.0, "protein": 11.9, "fat": 1.5,
+    "carbohydrate": 73.6, "calcium": 26.0, "iron": 2.5, "zinc": 1.25,
+    "vitamin_a": 0.0, "vitamin_c": 0.0, "per_amount_g": 100,
+    "remark": "标准粉，中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "牛肉", "food_category": "畜肉", "energy": 125.0, "protein": 19.9, "fat": 4.2,
+    "carbohydrate": 2.0, "calcium": 9.0, "iron": 3.0, "zinc": 4.2,
+    "vitamin_a": 0.007, "vitamin_c": 0.0, "per_amount_g": 100,
+    "remark": "牛瘦肉，中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "虾", "food_category": "水产", "energy": 93.0, "protein": 18.6, "fat": 0.8,
+    "carbohydrate": 2.8, "calcium": 62.0, "iron": 1.5, "zinc": 2.38,
+    "vitamin_a": 0.015, "vitamin_c": 0.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "牛奶", "food_category": "奶类", "energy": 54.0, "protein": 3.0, "fat": 3.2,
+    "carbohydrate": 3.4, "calcium": 104.0, "iron": 0.3, "zinc": 0.42,
+    "vitamin_a": 0.024, "vitamin_c": 1.0, "per_amount_g": 100,
+    "remark": "全脂牛奶，中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "菠菜", "food_category": "蔬菜", "energy": 24.0, "protein": 2.6, "fat": 0.3,
+    "carbohydrate": 4.5, "calcium": 66.0, "iron": 2.9, "zinc": 0.85,
+    "vitamin_a": 0.487, "vitamin_c": 32.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "胡萝卜", "food_category": "蔬菜", "energy": 37.0, "protein": 1.0, "fat": 0.2,
+    "carbohydrate": 8.8, "calcium": 32.0, "iron": 1.0, "zinc": 0.23,
+    "vitamin_a": 0.688, "vitamin_c": 13.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "西兰花", "food_category": "蔬菜", "energy": 34.0, "protein": 4.1, "fat": 0.6,
+    "carbohydrate": 4.3, "calcium": 67.0, "iron": 1.0, "zinc": 0.78,
+    "vitamin_a": 0.031, "vitamin_c": 51.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "黄瓜", "food_category": "蔬菜", "energy": 16.0, "protein": 0.8, "fat": 0.2,
+    "carbohydrate": 2.9, "calcium": 24.0, "iron": 0.5, "zinc": 0.18,
+    "vitamin_a": 0.015, "vitamin_c": 9.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "冬瓜", "food_category": "蔬菜", "energy": 11.0, "protein": 0.4, "fat": 0.2,
+    "carbohydrate": 2.6, "calcium": 19.0, "iron": 0.2, "zinc": 0.07,
+    "vitamin_a": 0.013, "vitamin_c": 18.0, "per_amount_g": 100,
+    "remark": "中国食物成分表（示例数据）"
+  },
+  {
+    "food_name": "玉米", "food_category": "谷类", "energy": 112.0, "protein": 4.0, "fat": 1.2,
+    "carbohydrate": 22.8, "calcium": 2.0, "iron": 1.1, "zinc": 0.9,
+    "vitamin_a": 0.017, "vitamin_c": 16.0, "per_amount_g": 100,
+    "remark": "鲜玉米，中国食物成分表（示例数据）"
+  }
+]

@@ -1,0 +1,371 @@
+/* ============================================================
+   家味 · 家庭AI食谱推荐系统 — 全局样式
+   设计语言：鼠尾草绿 · 暖白中性 · 高级干净
+   主色 #2F6B4F / 浅底 #E9F1EC / 页面底 #F5F6F2
+   层级靠留白与字重区分，主色仅用于重点按钮、高亮标签、强调文字
+   ============================================================ */
+:root {
+  /* 品牌色（鼠尾草绿系，单一主色） */
+  --hf-primary: #2f6b4f;
+  --hf-primary-dark: #24563f;
+  --hf-primary-light: #e9f1ec;
+  /* 旧蜜糖金并入主色：原有渐变自动塌缩为纯色，保持单一主色 */
+  --hf-gold: #2f6b4f;
+  --hf-gold-light: #e9f1ec;
+
+  /* 中性色（暖白调） */
+  --hf-bg: #f5f6f2;
+  --hf-card: #ffffff;
+  --hf-line: #e8e9e4;
+  --hf-line-soft: #eff0eb;
+  --hf-ink: #20241f;
+  --hf-ink-2: #6e736b;
+  --hf-ink-3: #a9aea5;
+
+  /* 语义色（低饱和，与主色同调） */
+  --hf-success: #2f6b4f;
+  --hf-warning: #a87b2a;
+  --hf-danger: #b4464f;
+
+  /* 阴影（柔和低透明度，拒绝厚重深色阴影） */
+  --hf-shadow-sm: 0 1px 2px rgba(28, 32, 28, 0.05);
+  --hf-shadow: 0 4px 16px rgba(28, 32, 28, 0.06);
+  --hf-shadow-lg: 0 12px 32px rgba(28, 32, 28, 0.08);
+
+  /* 圆角 */
+  --hf-radius: 20px;
+  --hf-radius-sm: 12px;
+  --hf-radius-lg: 24px;
+
+  /* 覆盖 Element Plus 主色（鼠尾草绿系） */
+  --el-color-primary: #2f6b4f;
+  --el-color-primary-light-3: #5d8d74;
+  --el-color-primary-light-5: #8aada0;
+  --el-color-primary-light-7: #b7cec2;
+  --el-color-primary-light-8: #d2e0d8;
+  --el-color-primary-light-9: #e9f1ec;
+  --el-color-primary-dark-2: #24563f;
+  --el-color-success: #2f6b4f;
+  --el-color-warning: #a87b2a;
+  --el-color-danger: #b4464f;
+  --el-border-radius-base: 10px;
+  --el-border-color: #e8e9e4;
+  --el-border-color-light: #eff0eb;
+  --el-fill-color-light: #f5f6f2;
+  --el-fill-color-blank: #ffffff;
+  --el-text-color-primary: #20241f;
+  --el-text-color-regular: #3d423d;
+  --el-text-color-secondary: #6e736b;
+  --el-text-color-placeholder: #a9aea5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', -apple-system,
+    'Segoe UI', sans-serif;
+  color: var(--hf-ink);
+  /* 高级干净：平涂暖白底，无渐变无光晕 */
+  background: var(--hf-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- 平涂卡片 ---------- */
+.glass-card {
+  background: var(--hf-card);
+  border: 1px solid var(--hf-line);
+  border-radius: var(--hf-radius);
+  box-shadow: var(--hf-shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--hf-shadow);
+}
+
+/* ---------- 页面容器 ---------- */
+.page-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 28px 32px 40px;
+  max-width: 1320px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ---------- 页头装饰条 + 标题 ---------- */
+.page-head {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-left: 18px;
+}
+.page-head::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 5px;
+  border-radius: 3px;
+  background: var(--hf-primary);
+}
+.page-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--hf-ink);
+  margin: 0;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.page-sub {
+  color: var(--hf-ink-2);
+  font-size: 13px;
+  margin: 6px 0 0;
+  line-height: 1.6;
+  max-width: 720px;
+}
+
+/* ---------- 区块标题 ---------- */
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--hf-ink);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title .el-icon {
+  color: var(--hf-primary);
+  font-size: 16px;
+}
+
+/* ---------- 卡片头部（标题 + 右侧操作） ---------- */
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.card-head .section-title {
+  margin: 0;
+}
+
+/* ---------- 等宽数字 ---------- */
+.cell-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   Element Plus 全域覆写（鼠尾草绿系）
+   ============================================================ */
+
+/* 卡片 */
+.el-card {
+  --el-card-border-color: var(--hf-line);
+  --el-card-bg-color: var(--hf-card);
+  border-radius: var(--hf-radius-sm);
+}
+
+/* 纯色主按钮 */
+.el-button--primary {
+  background: var(--hf-primary);
+  border: none;
+  color: #fff;
+  --el-button-hover-bg-color: var(--hf-primary-dark);
+  --el-button-hover-border-color: var(--hf-primary-dark);
+  box-shadow: 0 2px 8px rgba(47, 107, 79, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.el-button--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(47, 107, 79, 0.24);
+}
+.el-button--primary:active {
+  transform: translateY(0);
+}
+
+/* 普通按钮 hover 抬升 */
+.el-button:not(.el-button--primary) {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.el-button:not(.el-button--primary):hover {
+  transform: translateY(-1px);
+  box-shadow: var(--hf-shadow-sm);
+}
+
+/* 表格：中性表头 + 行 hover */
+.el-table {
+  background: transparent !important;
+  border-radius: var(--hf-radius-sm);
+  overflow: hidden;
+}
+.el-table th.el-table__cell {
+  background: var(--hf-bg);
+  color: var(--hf-ink);
+  font-weight: 600;
+  font-size: 13px;
+}
+.el-table td.el-table__cell {
+  font-size: 13px;
+}
+.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background: #fafbf8;
+}
+.el-table__body tr:hover > td.el-table__cell {
+  background: var(--hf-primary-light) !important;
+}
+
+/* 胶囊标签 */
+.el-tag {
+  border-radius: 999px;
+}
+
+/* 输入框圆角 */
+.el-input__wrapper,
+.el-textarea__inner {
+  border-radius: 10px;
+}
+
+/* 圆角对话框（中性头） */
+.el-dialog {
+  border-radius: var(--hf-radius) !important;
+  overflow: hidden;
+}
+.el-dialog__header {
+  background: var(--hf-bg);
+  margin-right: 0 !important;
+  padding: 18px 24px !important;
+}
+.el-dialog__title {
+  font-weight: 700;
+  color: var(--hf-ink);
+}
+
+/* 圆角下拉 */
+.el-select-dropdown,
+.el-popper.is-light {
+  border-radius: var(--hf-radius-sm) !important;
+}
+
+/* 步骤条主色 */
+.el-step__head.is-process,
+.el-step__head.is-finish {
+  color: var(--hf-primary);
+  border-color: var(--hf-primary);
+}
+
+/* ---------- 工具类 ---------- */
+.text-muted {
+  color: var(--hf-ink-2);
+}
+
+.empty-hint {
+  color: var(--hf-ink-3);
+  font-size: 13px;
+  padding: 28px 0;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* 标签间距工具 */
+.tag-list .el-tag {
+  margin-right: 6px;
+  margin-bottom: 4px;
+}
+
+/* 滚动条美化（中性灰绿） */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #d3d6cf;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b6bbb1;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ============================================================
+   排版高级化增强（v2）
+   ============================================================ */
+
+/* 卡片：平涂，无装饰光效 */
+.glass-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 区块标题：主色圆点 + 更清晰层级 */
+.section-title {
+  letter-spacing: 0.01em;
+}
+.section-title::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--hf-primary);
+  box-shadow: 0 0 0 3px rgba(47, 107, 79, 0.1);
+}
+
+/* 页面间距呼吸感 */
+.page-wrap {
+  gap: 24px;
+  padding: 30px 34px 44px;
+}
+
+/* 按钮细节：字重 + 圆润 */
+.el-button {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.el-button--primary {
+  border-radius: 12px;
+}
+
+/* 卡片内边距统一更舒适 */
+.el-card__body {
+  padding: 20px 22px;
+}
+
+/* 页头副标题微调 */
+.page-sub {
+  max-width: 760px;
+}
+
+/* 输入框聚焦主色环 */
+.el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px rgba(47, 107, 79, 0.35) inset;
+}
+
+/* 表格空态 */
+.el-table__empty-text {
+  color: var(--hf-ink-3);
+  font-size: 13px;
+  padding: 22px 0;
+  letter-spacing: 0.02em;
+}

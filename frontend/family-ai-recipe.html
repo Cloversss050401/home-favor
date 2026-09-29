@@ -1,0 +1,3268 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>家味 · 家庭AI食谱推荐系统</title>
+<meta name="description" content="基于家中现有食材，一键生成适配全家共享的餐食方案，每人每餐同步输出摄入优点与营养缺口评估，配套智能采购建议与每周营养分析报告。">
+<style>
+/* ============================================================
+   家味 · 家庭AI食谱推荐系统 — 单文件应用
+   视觉：flat-canvas-product / personal-wellness
+   量化：flat-soft-editorial
+   ============================================================ */
+:root{
+  --canvas:#FFFFFF;
+  --canvas-band:#F5F7F3;
+  --ink:#1A1D17;
+  --ink-2:#4A4F45;
+  --ink-3:#7C8276;
+  --line:#E4E8DE;
+  --line-strong:#CBD2C2;
+  --accent:#3E8E5A;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#E4F2E7;
+  --accent-soft-2:#F0F7F1;
+  --warn:#B9770F;
+  --warn-soft:#FBF1DC;
+  --danger:#B4453B;
+  --danger-soft:#FBE9E7;
+  --ok:#2E7D4F;
+  --radius-card:20px;
+  --radius-control:14px;
+  --shadow-1:0 1px 2px rgba(26,29,23,.05);
+  --shadow-2:0 8px 24px rgba(26,29,23,.07);
+  --content:1280px;
+  --nav-h:64px;
+  --font-display:500 44px/1.16 "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",-apple-system,"Segoe UI",sans-serif;
+  --font-h2:600 32px/1.24 "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",-apple-system,"Segoe UI",sans-serif;
+  --font-h3:600 20px/1.3 "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",-apple-system,"Segoe UI",sans-serif;
+  --font-body:400 16px/1.6 "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",-apple-system,"Segoe UI",sans-serif;
+  --font-small:400 14px/1.55 "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font:var(--font-body);color:var(--ink);background:var(--canvas);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+ul,ol{list-style:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+/* ---------- 布局基础 ---------- */
+.container{max-width:var(--content);margin:0 auto;padding:0 24px}
+.section{padding:88px 0}
+.section--band{background:var(--canvas-band)}
+.section-head{max-width:720px;margin-bottom:40px}
+.section-head .eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:600;letter-spacing:.12em;color:var(--accent);
+  text-transform:uppercase;margin-bottom:12px;
+}
+.section-head h2{font:var(--font-h2);letter-spacing:-.01em}
+.section-head p{margin-top:12px;color:var(--ink-2);font-size:17px;line-height:1.65}
+
+/* ---------- 顶部导航 ---------- */
+.nav{
+  position:sticky;top:0;z-index:50;
+  height:var(--nav-h);
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.nav-inner{max-width:var(--content);margin:0 auto;height:100%;padding:0 24px;display:flex;align-items:center;gap:24px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:-.01em}
+.brand .logo{
+  width:32px;height:32px;border-radius:10px;background:var(--accent);
+  display:grid;place-items:center;color:#fff;flex:none;
+}
+.brand .logo svg{width:19px;height:19px}
+.nav-links{display:flex;align-items:center;gap:4px;margin-left:8px}
+.nav-links a{
+  padding:8px 13px;border-radius:10px;font-size:15px;font-weight:500;color:var(--ink-2);
+  transition:background .15s ease,color .15s ease;
+}
+.nav-links a:hover{background:var(--canvas-band);color:var(--ink)}
+.nav-spacer{flex:1}
+.nav-cta{display:flex;align-items:center;gap:10px}
+.nav-cta .btn{white-space:nowrap}
+.menu-toggle{display:none;width:40px;height:40px;border-radius:10px;place-items:center;color:var(--ink)}
+.menu-toggle svg{width:22px;height:22px}
+.menu-open{display:none}
+
+/* ---------- 按钮 ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:50px;padding:0 22px;border-radius:var(--radius-control);
+  font-size:16px;font-weight:600;
+  transition:transform .12s ease,box-shadow .12s ease,background .15s ease;
+}
+.btn--primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 2px 10px rgba(62,142,90,.28)}
+.btn--primary:hover{background:#35794D}
+.btn--ghost{border:1px solid var(--line-strong);color:var(--ink);background:#fff}
+.btn--ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn--lg{height:56px;padding:0 28px;font-size:17px}
+.btn--sm{height:40px;padding:0 15px;font-size:14px}
+.btn:active{transform:translateY(1px)}
+.btn-icon svg{width:19px;height:19px}
+.btn[aria-disabled="true"],.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ---------- Hero ---------- */
+.hero{padding:88px 0 72px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,var(--accent-soft-2) 0%,var(--canvas) 70%)}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.hero-copy .kicker{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#fff;border:1px solid var(--line);border-radius:999px;
+  padding:7px 15px;font-size:13px;font-weight:600;color:var(--accent);
+  margin-bottom:22px;box-shadow:var(--shadow-1);
+}
+.hero-copy h1{font:var(--font-display);letter-spacing:-.02em;max-width:12em}
+.hero-copy h1 em{font-style:normal;color:var(--accent)}
+.hero-copy .lead{margin-top:20px;font-size:18px;line-height:1.7;color:var(--ink-2);max-width:36em}
+.hero-actions{display:flex;align-items:center;gap:14px;margin-top:32px;flex-wrap:wrap}
+.hero-note{margin-top:18px;font-size:13px;color:var(--ink-3);display:flex;align-items:center;gap:6px}
+.hero-note svg{width:15px;height:15px;flex:none}
+.hero-mock{
+  position:relative;background:#fff;border:1px solid var(--line);border-radius:24px;
+  box-shadow:var(--shadow-2);padding:24px;overflow:hidden;
+}
+.mock-bar{display:flex;align-items:center;gap:6px;margin-bottom:18px}
+.mock-bar i{width:10px;height:10px;border-radius:50%;background:var(--line-strong)}
+.mock-bar i:nth-child(3){margin-right:8px}
+.mock-bar span{font-size:12px;color:var(--ink-3)}
+.mock-tag{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-left:auto}
+.mock-dish{border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
+.mock-dish .dot{width:38px;height:38px;border-radius:11px;background:var(--accent-soft);display:grid;place-items:center;flex:none;color:var(--accent)}
+.mock-dish .dot svg{width:20px;height:20px}
+.mock-dish b{display:block;font-size:15px}
+.mock-dish small{color:var(--ink-3);font-size:12.5px}
+.mock-dish .metric{margin-left:auto;text-align:right;flex:none}
+.mock-dish .metric b{color:var(--accent);font-size:14px}
+.mock-dish .metric small{display:block;font-size:11px;color:var(--ink-3)}
+.mock-people{margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mock-people div{border:1px solid var(--line);border-radius:12px;padding:9px 8px;text-align:center;background:var(--canvas-band)}
+.mock-people b{display:block;font-size:12.5px}
+.mock-people small{font-size:11px;color:var(--ink-3)}
+.mock-people .up{color:var(--ok);font-weight:600}
+.mock-people .gap{color:var(--warn);font-weight:600}
+
+/* ---------- 步骤 ---------- */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;counter-reset:step}
+.step{
+  position:relative;background:#fff;border:1px solid var(--line);border-radius:var(--radius-card);
+  padding:26px 22px 24px;transition:box-shadow .15s ease,transform .15s ease;
+}
+.step:hover{box-shadow:var(--shadow-2);transform:translateY(-2px)}
+.step .num{
+  width:42px;height:42px;border-radius:13px;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-weight:700;font-size:18px;margin-bottom:16px;
+}
+.step h3{font:var(--font-h3);margin-bottom:8px}
+.step p{font-size:14px;line-height:1.65;color:var(--ink-2)}
+.step .hint{margin-top:12px;font-size:12.5px;color:var(--ink-3);display:flex;align-items:center;gap:5px}
+.step .hint svg{width:14px;height:14px;flex:none}
+
+/* ---------- 闭环 ---------- */
+.loop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.loop-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-card);padding:28px 24px;position:relative;overflow:hidden}
+.loop-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--accent)}
+.loop-card:nth-child(2)::before{background:var(--ok)}
+.loop-card:nth-child(3)::before{background:var(--warn)}
+.loop-card .ico{
+  width:46px;height:46px;border-radius:14px;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;margin-bottom:16px;
+}
+.loop-card .ico svg{width:24px;height:24px}
+.loop-card h3{font:var(--font-h3);margin-bottom:8px}
+.loop-card p{font-size:14.5px;color:var(--ink-2);line-height:1.65}
+.loop-card ul{margin-top:14px;display:grid;gap:7px}
+.loop-card ul li{font-size:13.5px;color:var(--ink-2);display:flex;gap:8px;align-items:flex-start}
+.loop-card ul li svg{width:15px;height:15px;color:var(--accent);flex:none;margin-top:3px}
+
+/* ---------- 示例 ---------- */
+.example-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:28px;align-items:start}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius-card);overflow:hidden}
+.panel-head{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.panel-head h3{font:var(--font-h3);font-size:17px}
+.panel-head .pill{margin-left:auto;font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:999px}
+.panel-body{padding:20px 22px}
+.ing-list{display:flex;flex-wrap:wrap;gap:9px}
+.ing-chip{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--canvas-band);border:1px solid var(--line);border-radius:999px;
+  padding:8px 14px;font-size:14px;font-weight:500;
+}
+.ing-chip svg{width:15px;height:15px;color:var(--accent)}
+.dish-list{display:grid;gap:10px}
+.dish-row{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:14px;padding:12px 15px}
+.dish-row .no{
+  width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-size:13px;font-weight:700;flex:none;
+}
+.dish-row b{font-size:15px}
+.dish-row small{color:var(--ink-3);font-size:12.5px;margin-left:auto;text-align:right}
+.people-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.person{border:1px solid var(--line);border-radius:16px;padding:16px}
+.person-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.person-head .avatar{
+  width:36px;height:36px;border-radius:12px;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-size:14px;font-weight:700;flex:none;
+}
+.person-head b{font-size:15px}
+.person-head small{display:block;color:var(--ink-3);font-size:12px;font-weight:400}
+.person ul{display:grid;gap:6px}
+.person li{font-size:13px;color:var(--ink-2);display:flex;gap:7px;align-items:center}
+.person li svg{width:14px;height:14px;flex:none}
+.person li.up svg{color:var(--ok)}
+.person li.gap svg{color:var(--warn)}
+.person li.up{color:var(--ok)}
+.person li.gap{color:var(--warn)}
+.example-note{margin-top:16px;font-size:12.5px;color:var(--ink-3);display:flex;gap:6px;align-items:flex-start}
+.example-note svg{width:14px;height:14px;flex:none;margin-top:2px}
+
+/* ---------- 触发条件 ---------- */
+.rule-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;min-width:0}
+.rule-grid>*{min-width:0}
+.rule-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-card);padding:26px 24px;display:flex;gap:18px;align-items:flex-start}
+.rule-card .ico{width:44px;height:44px;border-radius:13px;background:var(--warn-soft);color:var(--warn);display:grid;place-items:center;flex:none}
+.rule-card>div{min-width:0}
+.rule-card .ico svg{width:22px;height:22px}
+.rule-card h3{font:var(--font-h3);font-size:17px;margin-bottom:6px}
+.rule-card p{font-size:14px;color:var(--ink-2);line-height:1.65}
+.rule-card .cond{margin-top:10px;font-size:12.5px;font-weight:600;color:var(--warn);background:var(--warn-soft);border-radius:8px;padding:6px 10px;display:inline-block}
+
+/* ---------- CTA ---------- */
+.cta-band{background:linear-gradient(120deg,var(--accent) 0%,#2F7A4A 100%);border-radius:28px;padding:56px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.cta-band h2{font:var(--font-h2);font-size:34px;letter-spacing:-.01em}
+.cta-band p{margin:14px auto 0;max-width:34em;font-size:16px;line-height:1.7;opacity:.92}
+.cta-band .btn{margin-top:30px;background:#fff;color:var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.cta-band .btn:hover{background:var(--accent-soft-2)}
+.cta-band .mini{margin-top:16px;font-size:12.5px;opacity:.78}
+
+/* ---------- 页脚 ---------- */
+.footer{border-top:1px solid var(--line);padding:36px 0 40px}
+.footer-inner{max-width:var(--content);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.footer .brand{font-size:16px}
+.footer .legal{margin-left:auto;font-size:12.5px;color:var(--ink-3);display:flex;gap:16px;flex-wrap:wrap}
+
+/* ---------- Toast ---------- */
+#toast-region{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:200;display:grid;gap:8px;width:min(92vw,420px);pointer-events:none}
+.toast{
+  background:var(--ink);color:#fff;border-radius:12px;padding:12px 18px;
+  font-size:14px;line-height:1.5;box-shadow:var(--shadow-2);
+  display:flex;align-items:center;gap:9px;
+  animation:toast-in .22s ease-out;
+}
+.toast svg{width:17px;height:17px;flex:none;color:#8ED6A8}
+.toast--warn svg{color:#F5C26B}
+@keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ---------- 跳转 ---------- */
+.skip-link{position:absolute;left:-999px;top:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:0 0 10px 0;z-index:300;font-size:14px}
+.skip-link:focus{left:0}
+
+/* ---------- 无障碍：减少动效 ---------- */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+@media (max-width:1080px){
+  .hero-grid{gap:36px}
+  .steps{grid-template-columns:repeat(2,1fr)}
+  .loop-grid{grid-template-columns:1fr;max-width:560px}
+}
+@media (max-width:900px){
+  .nav-links{display:none}
+  .menu-toggle{display:grid}
+  .menu-open:not([hidden]){display:block}
+  .nav-cta .btn--primary.only-wide{display:none}
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+  .hero{padding:56px 0 56px}
+  .hero-copy h1{font-size:38px}
+  .hero-mock{order:2}
+  .example-grid{grid-template-columns:1fr}
+  .people-grid{grid-template-columns:1fr}
+  .rule-grid{grid-template-columns:1fr}
+  .section{padding:64px 0}
+  .cta-band{padding:44px 26px}
+}
+@media (max-width:640px){
+  .container{padding:0 16px}
+  .section-head h2{font-size:26px}
+  .hero-copy h1{font-size:32px;line-height:1.2}
+  .hero-copy .lead{font-size:16px}
+  .hero-actions .btn{flex:1;justify-content:center}
+  .steps{grid-template-columns:1fr}
+  .loop-card{padding:22px 18px}
+  .panel-body{padding:16px}
+  .mock-people{grid-template-columns:repeat(2,1fr)}
+  .cta-band h2{font-size:26px}
+  .footer-inner{gap:10px}
+  .section{padding:52px 0}
+  .nav-cta{gap:8px}
+}
+@media (max-width:360px){
+  .hero-copy h1{font-size:28px}
+  .hero-actions{flex-direction:column;align-items:stretch}
+}
+
+/* ---------- 家庭档案工作区 ---------- */
+.flow{
+  display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 28px;
+  padding:6px;background:#fff;border:1px solid var(--line);border-radius:16px;width:fit-content;
+}
+.flow li{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 14px;border-radius:11px;font-size:14px;font-weight:600;color:var(--ink-3);
+}
+.flow li.on{background:var(--accent-soft);color:var(--accent)}
+.flow li.done{color:var(--ok)}
+.flow li span{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;background:rgba(62,142,90,.14);color:var(--accent)}
+.flow li.on span{background:var(--accent);color:#fff}
+.family-layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:24px;align-items:start}
+.family-main{background:#fff;border:1px solid var(--line);border-radius:var(--radius-card);padding:24px}
+.family-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.family-head h3{font:var(--font-h3)}
+.member-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.member-card{
+  border:1px solid var(--line);border-radius:16px;padding:16px;
+  display:flex;flex-direction:column;gap:10px;background:var(--canvas);position:relative;
+}
+.member-card .mc-head{display:flex;align-items:center;gap:11px}
+.member-card .avatar{width:42px;height:42px;border-radius:13px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:17px;flex:none}
+.member-card .avatar.alt{background:var(--warn-soft);color:var(--warn)}
+.member-card .avatar.baby{background:#FCEBEA;color:#C96A5E}
+.member-card .mc-name{font-weight:700;font-size:15.5px;line-height:1.3}
+.member-card .mc-role{font-size:12.5px;color:var(--ink-3);line-height:1.5}
+.rule-tags{display:flex;flex-wrap:wrap;gap:6px}
+.rule-tag{
+  font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);
+  padding:4px 9px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;
+}
+.rule-tag svg{width:12.5px;height:12.5px}
+.avoid-line{font-size:12.5px;color:var(--danger);display:flex;gap:6px;align-items:flex-start;line-height:1.5}
+.avoid-line svg{width:13px;height:13px;flex:none;margin-top:2px}
+.mc-actions{margin-top:auto;display:flex;gap:8px;padding-top:4px}
+.mc-actions .btn{height:34px;padding:0 12px;font-size:13px;border-radius:10px}
+.mc-actions .btn--danger{border:1px solid rgba(180,69,59,.35);color:var(--danger);background:#fff}
+.mc-actions .btn--danger:hover{background:var(--danger);color:#fff}
+.btn--danger-solid{background:var(--danger);color:#fff}
+.btn--danger-solid:hover{background:#9C3830}
+.family-empty{
+  color:var(--ink-3);font-size:14px;line-height:1.7;text-align:center;
+  padding:30px 16px;border:1px dashed var(--line-strong);border-radius:14px;
+}
+.member-form-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-card);
+  padding:24px;box-shadow:var(--shadow-2);position:sticky;top:calc(var(--nav-h) + 16px);
+  scroll-margin-top:calc(var(--nav-h) + 16px);
+}
+.member-form-card h3{font:var(--font-h3);margin-bottom:4px}
+.member-form-card .form-sub{font-size:13px;color:var(--ink-3);margin-bottom:18px}
+.field{margin-bottom:16px}
+.field>label{display:block;font-size:13.5px;font-weight:600;margin-bottom:8px;color:var(--ink)}
+.field .hint{font-weight:400;color:var(--ink-3);font-size:12px;margin-left:4px}
+.field input[type=text],.field select{
+  width:100%;height:44px;padding:0 13px;border:1px solid var(--line-strong);
+  border-radius:12px;font:inherit;font-size:14.5px;background:#fff;color:var(--ink);
+}
+.field input[type=text]:focus,.field select:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(62,142,90,.14)}
+.chip-group{display:flex;flex-wrap:wrap;gap:8px}
+.chip-opt{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid var(--line-strong);
+  border-radius:11px;font-size:13.5px;cursor:pointer;color:var(--ink-2);background:#fff;user-select:none;
+  transition:border-color .12s ease,background .12s ease,color .12s ease;
+}
+.chip-opt input{position:absolute;opacity:0;pointer-events:none}
+.chip-opt .ck{width:16px;height:16px;border:1.6px solid var(--line-strong);border-radius:5px;display:grid;place-items:center;color:#fff;flex:none;transition:background .12s ease,border-color .12s ease}
+.chip-opt .ck svg{width:11px;height:11px;opacity:0}
+.chip-opt input:checked+.ck{background:var(--accent);border-color:var(--accent)}
+.chip-opt input:checked+.ck svg{opacity:1}
+.chip-opt input:checked~.txt{color:var(--ink);font-weight:600}
+.chip-opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.chip-other-inp{flex:1 1 180px;min-width:150px;border:1.4px solid var(--line-strong);border-radius:9px;padding:8px 12px;font:inherit;color:var(--ink);background:var(--canvas);margin:2px 0}
+.chip-other-inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.chip-other-inp[hidden]{display:none}
+.radio-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.form-actions{display:flex;gap:10px;margin-top:6px}
+.form-actions .btn{flex:1}
+.form-actions .btn--ghost{flex:0 0 auto}
+.form-error{color:var(--danger);font-size:13px;line-height:1.5;background:var(--danger-soft);padding:9px 12px;border-radius:10px;margin-bottom:14px;display:none}
+.form-error.show{display:block}
+.family-note{font-size:13.5px;color:var(--ink-3);margin-top:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.family-note b{color:var(--accent)}
+.member-list .mc-rules{margin-top:2px}
+@media (max-width:1080px){
+  .family-layout{grid-template-columns:1fr}
+  .member-form-card{position:static}
+}
+@media (max-width:760px){
+  .member-list{grid-template-columns:1fr}
+  .flow{width:100%}
+}
+@media (max-width:420px){
+  .radio-row{grid-template-columns:1fr}
+}
+
+/* ---------- 食材录入工作区 ---------- */
+.entry-layout{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:start}
+.entry-panel{display:grid;gap:14px}
+.entry-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-card);padding:18px;box-shadow:var(--shadow-1)}
+.entry-card h3{font:var(--font-h3);margin-bottom:2px}
+.entry-card .entry-intro{font-size:13px;color:var(--ink-3);margin-bottom:12px}
+.entry-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.entry-tab{
+  display:flex;align-items:center;gap:7px;justify-content:center;padding:10px 8px;border:1px solid var(--line-strong);
+  border-radius:11px;background:#fff;font-size:13.5px;color:var(--ink-2);cursor:pointer;transition:all .13s ease;
+}
+.entry-tab svg{width:16px;height:16px;flex:none}
+.entry-tab.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.entry-tab:not(.on):hover{border-color:var(--ink-4)}
+.entry-body{display:none}
+.entry-body.on{display:block}
+.ing-input-row{display:flex;gap:8px}
+.ing-input-row .field-input{
+  flex:1;min-width:0;height:44px;padding:0 13px;border:1px solid var(--line-strong);border-radius:12px;
+  font:inherit;font-size:14.5px;background:#fff;color:var(--ink);
+}
+.ing-input-row .field-input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(62,142,90,.14)}
+.ing-parse-hint{font-size:12px;color:var(--ink-3);margin-top:8px}
+.suggest-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.suggest-chip{
+  padding:6px 12px;border:1px dashed var(--line-strong);border-radius:20px;font-size:13px;color:var(--ink-2);
+  cursor:pointer;background:#fff;transition:all .12s ease;
+}
+.suggest-chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.voice-stage{text-align:center;padding:6px 0}
+.voice-btn{
+  width:100%;max-width:220px;height:46px;border:1px solid var(--line-strong);border-radius:23px;background:#fff;
+  font:inherit;font-size:14.5px;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .13s ease;
+}
+.voice-btn .mic-ico{width:17px;height:17px}
+.voice-btn:hover{border-color:var(--accent);color:var(--accent)}
+.voice-btn.recording{border-color:var(--danger);color:var(--danger);background:var(--danger-soft)}
+.voice-btn.recording .pulse{display:inline-block}
+.voice-btn .pulse{display:none}
+.voice-status{min-height:20px;font-size:13px;color:var(--ink-2);margin-top:10px}
+.voice-status.busy{color:var(--accent);font-weight:600}
+.voice-status.transcript{font-size:14px;color:var(--ink)}
+.voice-note{font-size:12.5px;color:var(--ink-3);background:var(--bg-soft);border:1px dashed var(--line-strong);border-radius:10px;padding:9px 12px;margin-top:10px;text-align:left;line-height:1.6}
+.voice-note b{color:var(--ink-2)}
+.shot-frame{
+  border:1px dashed var(--line-strong);border-radius:12px;padding:16px;text-align:center;background:var(--bg-soft);min-height:120px;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;cursor:pointer;transition:border-color .13s ease;
+}
+.shot-frame:hover{border-color:var(--accent)}
+.shot-frame svg{width:30px;height:30px;color:var(--accent)}
+.shot-frame .shot-tip{font-size:13.5px;color:var(--ink-2)}
+.shot-frame .shot-sub{font-size:12px;color:var(--ink-3)}
+.shot-preview{margin-top:12px}
+.shot-preview img{width:100%;max-width:260px;height:auto;border-radius:10px;border:1px solid var(--line)}
+.shot-detect-result{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}
+.shot-detect-result h4{font-size:13.5px;margin-bottom:8px;color:var(--ink)}
+.camera-hint{font-size:12.5px;color:var(--ink-3);line-height:1.6;text-align:left;margin-top:10px}
+.stock-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.stock-head h3{font:var(--font-h3)}
+.stock-badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge-count{font-size:12px;color:var(--ink-2);background:var(--bg-soft);border:1px solid var(--line);padding:4px 10px;border-radius:20px}
+.ing-chips{display:flex;flex-wrap:wrap;gap:8px;min-height:40px}
+.ing-chip{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 9px 8px 13px;background:#fff;border:1px solid var(--line-strong);
+  border-radius:11px;font-size:13.5px;color:var(--ink);animation:chip-in .16s ease;
+}
+.ing-chip .src{font-size:11px;color:var(--ink-3);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.ing-chip .del{
+  width:20px;height:20px;border-radius:50%;border:none;background:var(--bg-soft);color:var(--ink-3);cursor:pointer;
+  display:grid;place-items:center;font-size:13px;line-height:1;transition:all .12s ease;padding:0;
+}
+.ing-chip .del:hover{background:var(--danger-soft);color:var(--danger)}
+.stock-empty{
+  border:1px dashed var(--line);border-radius:12px;padding:28px 18px;text-align:center;color:var(--ink-3);font-size:13.5px;
+}
+.entry-cta{margin-top:16px;display:flex;justify-content:flex-end}
+.entry-note-more{font-size:12.5px;color:var(--ink-3);margin-top:10px;line-height:1.6}
+@media (max-width:1080px){
+  .entry-layout{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .entry-tabs{grid-template-columns:1fr}
+  .ing-input-row{flex-direction:column}
+  .ing-input-row .btn{width:100%}
+}
+@keyframes chip-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+/* ---------- 方案生成工作区 ---------- */
+.plan-gate{
+  border:1px solid var(--line);border-radius:var(--radius-card);background:#fff;box-shadow:var(--shadow-2);
+  padding:26px;text-align:center;max-width:560px;margin:0 auto;
+}
+.plan-gate .gate-ico{width:46px;height:46px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin:0 auto 14px}
+.plan-gate .gate-ico svg{width:24px;height:24px}
+.plan-gate h3{font:var(--font-h3);margin-bottom:6px}
+.plan-gate p{font-size:14px;color:var(--ink-2);margin-bottom:6px;line-height:1.7}
+.plan-gate .gate-sub{font-size:13px;color:var(--ink-3);margin-bottom:18px}
+.plan-check{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:20px}
+.plan-check-item{
+  display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);background:var(--bg-soft);
+  border:1px solid var(--line);border-radius:20px;padding:8px 14px;
+}
+.plan-check-item .dot{width:9px;height:9px;border-radius:50%;background:var(--danger)}
+.plan-check-item.ok .dot{background:var(--accent)}
+.plan-check-item.ok{color:var(--ink)}
+.plan-generating{
+  display:none;align-items:center;justify-content:center;gap:14px;padding:34px 0;flex-direction:column;
+  color:var(--accent);font-size:14.5px;font-weight:600;
+}
+.plan-generating.show{display:flex}
+.spinner{width:34px;height:34px;border:3px solid var(--accent-soft);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.spin{animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.plan-msg{font-size:12.5px;color:var(--ink-3);margin-top:5px;font-weight:400}
+.plan-result{display:none}
+.plan-result.show{display:block}
+.plan-tiers{display:grid;gap:18px}
+.plan-tier{border:1px solid var(--line);border-radius:var(--radius-card);background:#fff;box-shadow:var(--shadow-1);overflow:hidden}
+.plan-tier-head{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--bg-soft);border-bottom:1px solid var(--line)}
+.plan-tier-head .tno{
+  width:26px;height:26px;border-radius:8px;background:var(--accent);color:#fff;font-size:13.5px;font-weight:700;
+  display:grid;place-items:center;flex:none;
+}
+.plan-tier-head h3{font-size:15px;margin:0}
+.plan-tier-head .tsub{font-size:12.5px;color:var(--ink-3);margin-left:auto}
+.plan-tier-body{padding:18px}
+.dish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.dish-card{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:#fff}
+.dish-card .d-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.dish-card .d-desc{font-size:12.5px;color:var(--ink-3);line-height:1.55}
+.dish-card .d-method{display:inline-block;font-size:11px;color:var(--accent);background:var(--accent-soft);border-radius:5px;padding:2px 7px;margin-top:7px}
+.dish-card .d-tags{font-size:11.5px;color:var(--ink-3);margin-top:6px}
+.dish-card .d-tags b{color:var(--ink-2)}
+.staple-tiers{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px}
+.staple-tiers h4{font-size:13.5px;margin-bottom:10px;color:var(--ink)}
+.tier-item{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px;padding:7px 0;border-bottom:1px solid var(--bg-soft)}
+.tier-item:last-child{border-bottom:none}
+.tier-item b{color:var(--accent)}
+.tier-item span{color:var(--ink-3);font-size:12.5px;width:100%}
+.member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.member-plan{border:1px solid var(--line);border-radius:12px;padding:15px 16px;background:#fff}
+.member-plan>h4{font-size:15px;margin-bottom:10px;padding-bottom:9px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.member-plan>h4::before{content:"";width:7px;height:18px;border-radius:3px;background:var(--accent)}
+.member-plan p{font-size:13px;color:var(--ink-2);line-height:1.65;margin-bottom:10px}
+.member-plan p b{color:var(--ink)}
+.member-plan .plus,.member-plan .gap{border-radius:10px;padding:10px 12px;margin-top:9px}
+.member-plan .plus{background:var(--accent-soft)}
+.member-plan .gap{background:var(--danger-soft)}
+.member-plan h4{font-size:12.5px;color:var(--ink);margin-bottom:5px}
+.member-plan ul{margin:0;padding-left:0;list-style:none}
+.member-plan li{font-size:12.5px;color:var(--ink-2);line-height:1.6;padding-left:14px;position:relative}
+.member-plan li::before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:50%}
+.member-plan .plus li::before{background:var(--accent)}
+.member-plan .gap li::before{background:var(--danger)}
+.plan-note{font-size:12.5px;color:var(--ink-3);background:var(--bg-soft);border:1px dashed var(--line-strong);border-radius:10px;padding:10px 14px;margin-top:4px;line-height:1.6}
+/* 第三层：分级补充建议 + 智能采购清单 */
+.purchase-box{display:flex;flex-direction:column;gap:14px}
+.purchase-trigger{padding:11px 14px;border-radius:10px;background:var(--warn-soft,#fff8e6);border:1px solid var(--warn,#f0b429);font-size:13px;color:#7a5b00;line-height:1.7}
+.purchase-trigger b{color:#5c4400}
+/* 四步流程「前往操作」入口 */
+.step-go{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:9px 16px;border-radius:999px;border:1px solid var(--line-strong);background:#fff;color:var(--accent);font-size:13.5px;font-weight:600;text-decoration:none;transition:all .18s ease;cursor:pointer}
+.step-go:hover{background:var(--accent);border-color:var(--accent);color:#fff;transform:translateY(-1px)}
+.step-go svg{width:13px;height:13px;flex:none}
+/* 闭环体验入口条 */
+.loop-cta{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:26px;padding:20px;border-radius:16px;background:#fff;border:1px solid var(--line);text-align:center}
+.loop-cta b{font-size:15.5px;color:var(--ink)}
+.loop-cta span{font-size:13px;color:var(--ink-2);line-height:1.6}
+/* 采购清单「给什么」结构说明 */
+.rule-shop{grid-column:1 / -1}
+.rule-shop h3{font-size:15px;margin-bottom:4px}
+.rule-shop .rule-sub{font-size:12.5px;color:var(--ink-2);margin-bottom:12px}
+.rule-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.rule-table{width:100%;border-collapse:collapse;font-size:13px;min-width:660px}
+.rule-table th{background:var(--bg-soft);color:var(--ink-2);font-weight:600;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rule-table td{padding:10px 12px;border-bottom:1px solid var(--bg-soft);vertical-align:top;line-height:1.55}
+.rule-table tr:last-child td{border-bottom:none}
+.rule-table .demo-tag{display:inline-block;font-size:11px;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:1px 8px;margin-left:6px;font-weight:600}
+/* 真实引擎演示工具条 */
+.demo-run{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:18px 0 20px;padding:14px 16px;border-radius:14px;background:var(--bg-soft);border:1px solid var(--line-strong)}
+.demo-run .demo-run-tip{font-size:13px;color:var(--ink-2);line-height:1.6;flex:1 1 240px}
+.demo-run .demo-run-tip b{color:var(--ink)}
+.demo-live{display:none;margin-top:18px}
+.demo-live.show{display:block}
+.demo-live .demo-badge{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:#7a5b00;background:var(--warn-soft,#fff8e6);border:1px solid var(--warn,#f0b429);border-radius:999px;padding:5px 12px;margin-bottom:14px}
+.demo-live .demo-badge svg{width:13px;height:13px}
+.demo-live-note{font-size:12.5px;color:var(--ink-3);background:var(--bg-soft);border:1px dashed var(--line-strong);border-radius:10px;padding:10px 14px;margin-top:4px;line-height:1.6}
+.purchase-ok{padding:12px 14px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--line);font-size:13px;color:var(--ink-2);line-height:1.7;display:flex;gap:9px;align-items:flex-start}
+.purchase-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.purchase-table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+.purchase-table th{background:var(--bg-soft);color:var(--ink-2);font-weight:600;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.purchase-table td{padding:10px 12px;border-bottom:1px solid var(--bg-soft);vertical-align:top}
+.purchase-table tr:last-child td{border-bottom:none}
+.purchase-table .pri{width:66px}
+.pri-badge{display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:12px;border-radius:6px;padding:3px 8px}
+.pri-badge.high{background:var(--danger-soft);color:var(--danger)}
+.pri-badge.mid{background:var(--warn-soft,#fff8e6);color:#b57900}
+.pri-badge.low{background:var(--accent-soft);color:var(--accent)}
+.purchase-food{font-weight:600;color:var(--ink)}
+.purchase-note{font-size:12px;color:var(--ink-3);margin-top:2px}
+.purchase-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn.btn--export{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.btn.btn--export:hover{opacity:.88}
+/* T6 反馈优化 + 周报 */
+.fb-desc{font-size:12.5px;color:var(--ink-3);line-height:1.65;margin-bottom:12px}
+.fb-dishes{display:grid;gap:8px;margin-bottom:12px}
+.fb-dish-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff}
+.fb-dish-row label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+.fb-dish-row input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
+.fb-dish-row .dish-meta{font-size:11.5px;color:var(--ink-3)}
+.fb-dish-row select{font-size:12.5px;border:1px solid var(--line-strong);border-radius:8px;padding:5px 8px;background:#fff;color:var(--ink)}
+.fb-dish-row.off{opacity:.55}
+.fb-purchase-row{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink-2);margin-bottom:14px}
+.fb-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fb-tip{font-size:12.5px;color:var(--ink-3)}
+.weekly-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.auto-check{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);cursor:pointer}
+.auto-check input{accent-color:var(--accent);width:15px;height:15px}
+.weekly-report{display:grid;gap:12px}
+.weekly-empty{padding:18px;border:1px dashed var(--line-strong);border-radius:12px;text-align:center;color:var(--ink-3);font-size:13px;line-height:1.7}
+.wr-member{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.wr-member-head{display:flex;align-items:center;gap:8px;padding:11px 14px;background:var(--bg-soft);border-bottom:1px solid var(--line);font-size:14px;font-weight:600}
+.wr-member-head::before{content:"";width:7px;height:16px;border-radius:3px;background:var(--accent)}
+.wr-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.wr-table th{text-align:left;padding:8px 12px;color:var(--ink-3);font-weight:500;border-bottom:1px solid var(--bg-soft);white-space:nowrap}
+.wr-table td{padding:8px 12px;border-bottom:1px solid var(--bg-soft);vertical-align:middle}
+.wr-table tr:last-child td{border-bottom:none}
+.wr-bar{display:inline-block;height:7px;border-radius:4px;background:var(--bg-soft);vertical-align:middle;margin-right:8px;min-width:30px;max-width:150px}
+.wr-bar i{display:block;height:100%;border-radius:4px;background:var(--accent)}
+.wr-bar i.over{background:#e8a33d}
+.wr-bar i.low{background:var(--danger)}
+.wr-pill{display:inline-block;border-radius:5px;padding:2px 7px;font-size:11.5px;font-weight:600}
+.wr-pill.ok{background:var(--accent-soft);color:var(--accent)}
+.wr-pill.low{background:var(--danger-soft);color:var(--danger)}
+.wr-pill.over{background:var(--warn-soft,#fff3d6);color:#b57900}
+.wr-summary{border-radius:12px;padding:13px 15px;font-size:13px;line-height:1.75}
+.wr-summary.problem{background:var(--danger-soft);border:1px solid var(--line)}
+.wr-summary h4{font-size:13px;margin-bottom:6px}
+.wr-summary ul{margin:0;padding-left:0;list-style:none}
+.wr-summary li{padding-left:14px;position:relative}
+.wr-summary li::before{content:"";position:absolute;left:2px;top:9px;width:5px;height:5px;border-radius:50%;background:currentColor}
+.wr-advice{font-size:12.5px;color:var(--ink-2);line-height:1.7;margin-top:10px}
+.wr-advice b{color:var(--accent)}
+@media (max-width:560px){
+  .fb-dish-row{grid-template-columns:1fr;gap:6px}
+  .weekly-toolbar .btn{width:100%;justify-content:center}
+}
+@media (max-width:560px){
+  .purchase-table{min-width:440px}
+  .rule-table{min-width:440px}
+  .purchase-actions .btn{width:100%;justify-content:center}
+}
+@media (max-width:560px){
+  .plan-gate{padding:20px 16px}
+  .dish-grid{grid-template-columns:1fr}
+  .member-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+
+<!-- ================= 顶部导航 ================= -->
+<header class="nav" id="topnav">
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="家味首页">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3a7 7 0 0 0-7 7c0 4.4 3.1 8 7 8s7-3.6 7-8a7 7 0 0 0-7-7Z"/><path d="M11 21v-3"/><path d="M8.5 11a2.5 2.5 0 0 1 2-2.5"/></svg>
+      </span>
+      家味
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#family">家庭档案</a>
+      <a href="#pantry">食材录入</a>
+      <a href="#plan">生成方案</a>
+      <a href="#steps">使用步骤</a>
+      <a href="#loop">能力闭环</a>
+      <a href="#example">了解产品</a>
+      <a href="#rules">采购触发</a>
+    </nav>
+    <div class="nav-spacer"></div>
+    <div class="nav-cta">
+      <button class="btn btn--primary btn--sm only-wide" type="button" data-action="scroll-family">开始使用</button>
+      <button class="menu-toggle" type="button" aria-label="打开菜单" aria-expanded="false" data-action="toggle-menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- 移动端展开菜单 -->
+<div class="menu-open" id="mobile-menu" hidden>
+  <div class="container" style="padding-bottom:14px">
+    <nav aria-label="移动端导航" style="display:grid;gap:2px">
+      <a href="#family" style="padding:13px 14px;border-radius:10px;font-weight:600">家庭档案</a>
+      <a href="#pantry" style="padding:13px 14px;border-radius:10px;font-weight:600">食材录入</a>
+      <a href="#plan" style="padding:13px 14px;border-radius:10px;font-weight:600">生成方案</a>
+      <a href="#steps" style="padding:13px 14px;border-radius:10px;font-weight:600">使用步骤</a>
+      <a href="#loop" style="padding:13px 14px;border-radius:10px;font-weight:600">能力闭环</a>
+      <a href="#example" style="padding:13px 14px;border-radius:10px;font-weight:600">了解产品</a>
+      <a href="#rules" style="padding:13px 14px;border-radius:10px;font-weight:600">采购触发</a>
+      <button class="btn btn--primary" type="button" data-action="scroll-family" style="margin:8px 0 4px">开始使用</button>
+    </nav>
+  </div>
+</div>
+
+<main id="main">
+
+  <!-- ================= Hero ================= -->
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <span class="kicker">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5.25 3.83 8.44 9 9 5.17-.56 9-3.75 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/></svg>
+            家庭饮食健康管理工具
+          </span>
+          <h1 id="hero-title">用家中现有食材，<br>一键做出一桌<em>全家都合适</em>的饭</h1>
+          <p class="lead">录入今天的食材，10–30秒生成全家共享菜品清单；每位成员同步拿到「摄入优点 + 营养缺口」评估，食材不足时自动给出采购建议，每周自动汇总家庭营养周报。</p>
+          <div class="hero-actions">
+            <button class="btn btn--primary btn--lg btn-icon" type="button" data-action="scroll-family">
+              即刻生成全家餐单
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+            <a class="btn btn--ghost btn--lg" href="#example">先看产品演示</a>
+          </div>
+          <p class="hero-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11v5"/></svg>
+            面向家庭共享场景 · 每餐同步营养评估 · 数据自动计入周度统计
+          </p>
+        </div>
+
+        <div class="hero-mock" aria-label="方案展示示例卡片" role="img">
+          <div class="mock-bar">
+            <i></i><i></i><i></i><span>今日家庭餐单 · 已生成</span>
+            <span class="mock-tag">营养已校验</span>
+          </div>
+          <div class="mock-dish">
+            <span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M12 3v18"/><path d="M7 8c0 2 2 2 2 4s-2 2-2 4M17 8c0 2-2 2-2 4s2 2 2 4"/></svg></span>
+            <div><b>姜丝炒鸡胸肉</b><small>基础统一炒制 · 姜丝提味</small></div>
+            <div class="metric"><b>高蛋白</b><small>增肌适配</small></div>
+          </div>
+          <div class="mock-dish">
+            <span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l-1 7a3 3 0 1 1-6 0L8 3Z"/><path d="M4 21h16"/></svg></span>
+            <div><b>去油排骨冬瓜汤</b><small>表层去油 · 温补</small></div>
+            <div class="metric"><b>低钠</b><small>控盐友好</small></div>
+          </div>
+          <div class="mock-dish">
+            <span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10l-1 18H8L7 3Z"/><path d="M10 8h4"/></svg></span>
+            <div><b>清炒西兰花 / 菠菜</b><small>绿叶组合 · 膳食纤维</small></div>
+            <div class="metric"><b>高纤维</b><small>全家通用</small></div>
+          </div>
+          <div class="mock-people" aria-label="成员营养评估概览">
+            <div><b>爸爸</b><small class="up">蛋白达标</small><small class="gap">维A缺口35%</small></div>
+            <div><b>妈妈</b><small class="up">铁充足</small><small class="gap">钙缺口300mg</small></div>
+            <div><b>宝宝</b><small class="up">适龄形态</small><small class="gap">铁缺口40%</small></div>
+            <div><b>爷爷</b><small class="up">低钠温补</small><small class="gap">蛋白略低25%</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 使用步骤 ================= -->
+  <section class="section" id="steps" aria-labelledby="steps-title">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">How it works</span>
+        <h2 id="steps-title">四个步骤，从食材到全家营养闭环</h2>
+        <p>建立家庭档案后，每次开饭前只需录入现有食材——方案、评估、采购、周报一次到位。</p>
+      </div>
+      <div class="steps">
+        <article class="step">
+          <div class="num">1</div>
+          <h3>建立家庭档案</h3>
+          <p>勾选每位成员的饮食特征、健康情况、体质类型、过敏原与忌口，系统自动匹配最适配的饮食规则。</p>
+          <span class="hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5.25 3.83 8.44 9 9 5.17-.56 9-3.75 9-9V7l-9-5Z"/></svg>一人档案，全家受益</span>
+          <button class="step-go" type="button" data-action="scroll-family"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>前往建档</button>
+        </article>
+        <article class="step">
+          <div class="num">2</div>
+          <h3>录入现有食材</h3>
+          <p>拍摄识别、文字输入、武汉方言语音录入三种方式任选，识别结果可手动增删确认。</p>
+          <span class="hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5.25 3.83 8.44 9 9 5.17-.56 9-3.75 9-9V7l-9-5Z"/></svg>拍一拍、说一说、打一打</span>
+          <button class="step-go" type="button" data-action="scroll-pantry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>前往录食材</button>
+        </article>
+        <article class="step">
+          <div class="num">3</div>
+          <h3>一键生成方案</h3>
+          <p>10–30秒内完成全家饮食协调、营养校验与补位计算，生成共享菜品与分餐方案。</p>
+          <span class="hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5.25 3.83 8.44 9 9 5.17-.56 9-3.75 9-9V7l-9-5Z"/></svg>一桌统一制作，各人分开评估</span>
+          <button class="step-go" type="button" data-action="scroll-plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>前往生成</button>
+        </article>
+        <article class="step">
+          <div class="num">4</div>
+          <h3>反馈与长期管理</h3>
+          <p>标记实际制作菜品与食用分量，记录采购食材；数据自动计入每周营养分析报告。</p>
+          <span class="hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5.25 3.83 8.44 9 9 5.17-.56 9-3.75 9-9V7l-9-5Z"/></svg>单日食谱 → 采购补充 → 长期管理</span>
+          <button class="step-go" type="button" data-action="scroll-plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>前往反馈</button>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 家庭档案工作区 ================= -->
+  <section class="section" id="family" aria-labelledby="family-title">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Step 1 · Family profile</span>
+        <h2 id="family-title">建立家庭档案，系统自动匹配饮食规则</h2>
+        <p>为每位成员勾选饮食特征、健康情况、体质类型与过敏忌口，保存后自动生成最适配的饮食规则，供后续每餐方案使用。</p>
+      </div>
+
+      <div class="flow" role="list" aria-label="使用流程">
+        <span class="on" role="listitem"><span>1</span>家庭档案</span>
+        <span role="listitem"><span>2</span>食材录入</span>
+        <span role="listitem"><span>3</span>生成方案</span>
+        <span role="listitem"><span>4</span>结果与采购</span>
+        <span role="listitem"><span>5</span>反馈与周报</span>
+      </div>
+
+      <div class="family-layout">
+        <div class="family-main">
+          <div class="family-head">
+            <h3>家庭成员</h3>
+            <button class="btn btn--primary btn--sm btn-icon" type="button" data-action="add-member">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>添加成员
+            </button>
+          </div>
+          <div id="member-list" class="member-list" aria-live="polite"></div>
+          <p class="family-empty" id="member-empty">还没有家庭成员。点击「添加成员」，从第一个人开始建立这一家人的饮食档案。</p>
+          <p class="family-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--accent)"><path d="M12 2 3 7v6c0 5.25 3.83 8.44 9 9 5.17-.56 9-3.75 9-9V7l-9-5Z"/><path d="M12 8v4M12 16h.01"/></svg>
+            已建档 <b id="member-count">0</b> 位成员 · 档案数据仅保存在本机
+          </p>
+        </div>
+
+        <aside class="member-form-card" id="member-form" hidden>
+          <h3 id="member-form-title">添加成员</h3>
+          <p class="form-sub" id="member-form-sub">勾选内容越准确，后续营养评估越贴合个人需要</p>
+          <p class="form-error" id="member-form-error"></p>
+          <form id="member-form-fields" novalidate>
+            <input type="hidden" id="mf-id">
+            <div class="field">
+              <label for="mf-name">姓名 / 称呼 <span class="hint">必填</span></label>
+              <input type="text" id="mf-name" autocomplete="off" placeholder="如：爸爸、妈妈、宝宝、爷爷">
+            </div>
+            <div class="field">
+              <label for="mf-role">角色 <span class="hint">选填</span></label>
+              <select id="mf-role">
+                <option value="">不指定</option>
+                <option value="adult">成人</option>
+                <option value="elders">长辈（60岁以上）</option>
+                <option value="child">儿童（3-12岁）</option>
+                <option value="teen">青少年（13-17岁）</option>
+                <option value="baby">婴幼儿（0-3岁）</option>
+                <option value="pregnant">孕妈妈</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>饮食特征 <span class="hint">可多选</span></label>
+              <div class="chip-group" id="mf-traits"></div>
+            </div>
+            <div class="field">
+              <label>健康情况 <span class="hint">可多选</span></label>
+              <div class="chip-group" id="mf-health"></div>
+            </div>
+            <div class="field">
+              <label>体质类型 <span class="hint">可多选</span></label>
+              <div class="chip-group" id="mf-constitution"></div>
+            </div>
+            <div class="field">
+              <label>过敏原与忌口 <span class="hint">可多选，不限数量；其余忌口可填写在下方输入框</span></label>
+              <div class="chip-group" id="mf-allergies"></div>
+              <div class="field" style="margin:10px 0 0">
+                <input type="text" id="mf-avoid" autocomplete="off" placeholder="其他忌口，如：不吃香菜、少油">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn--primary" type="submit">保存档案</button>
+              <button class="btn btn--ghost" type="button" data-action="cancel-member">取消</button>
+            </div>
+          </form>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 食材录入工作区 ================= -->
+  <section class="section section--band" id="pantry" aria-labelledby="pantry-title">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Step 2 · Pantry scan</span>
+        <h2 id="pantry-title">录入现有食材，支持文字、拍照与语音三种方式</h2>
+        <p>把家里现有的食材告诉系统，任选一种或多种方式录入均可，结果进入同一份清单，可随时手动增删确认。拍摄与方言语音受本机浏览器能力限制，详情见各入口下方的说明。</p>
+      </div>
+
+      <div class="flow" role="list" aria-label="使用流程">
+        <span role="listitem"><span>1</span>家庭档案</span>
+        <span class="on" role="listitem"><span>2</span>食材录入</span>
+        <span role="listitem"><span>3</span>生成方案</span>
+        <span role="listitem"><span>4</span>结果与采购</span>
+        <span role="listitem"><span>5</span>反馈与周报</span>
+      </div>
+
+      <div class="entry-layout">
+        <div class="entry-panel">
+          <div class="entry-card">
+            <h3>食材录入</h3>
+            <p class="entry-intro">三种方式任选，识别结果进入右侧清单后可按需增删。</p>
+
+            <div class="entry-tabs" role="tablist" aria-label="录入方式">
+              <button class="entry-tab on" type="button" role="tab" aria-selected="true" data-tab="text">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2M9 20h6M12 4v16"/></svg>文字输入
+              </button>
+              <button class="entry-tab" type="button" role="tab" aria-selected="false" data-tab="photo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.5"/></svg>拍照识别
+              </button>
+              <button class="entry-tab" type="button" role="tab" aria-selected="false" data-tab="voice">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>语音录入
+              </button>
+            </div>
+
+            <div class="entry-body on" id="tab-text" role="tabpanel">
+              <div class="ing-input-row">
+                <input class="field-input" id="ing-text" type="text" autocomplete="off" placeholder="如：鸡胸肉、排骨 西兰花 豆腐 米类">
+                <button class="btn btn--primary" type="button" data-action="add-ing-text">添加</button>
+              </div>
+              <p class="ing-parse-hint">支持用中文逗号、顿号或空格分隔多个食材，一次添加。</p>
+              <div class="suggest-list" id="ing-suggest" aria-label="常见食材快捷添加"></div>
+            </div>
+
+            <div class="entry-body" id="tab-photo" role="tabpanel">
+              <label class="shot-frame" for="ing-photo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                <span class="shot-tip">拍摄或选择一张食材照片</span>
+                <span class="shot-sub">本机会在浏览器内对照片做文字识别（OCR），识别结果可一键加入清单，可手动修正</span>
+              </label>
+              <input type="file" id="ing-photo" accept="image/*" capture="environment" hidden>
+              <div class="shot-preview" id="shot-preview" hidden></div>
+              <div class="shot-detect-result" id="shot-detect-result" hidden>
+                <h4>识别结果</h4>
+                <p class="camera-hint" id="shot-ocr-status">正在识别图中文字……首次使用需加载识别引擎（约 3~10 秒，请稍候）。</p>
+                <div class="chip-group" id="shot-detected" role="group" aria-label="识别出的食材"></div>
+                <p class="camera-hint" id="shot-raw"></p>
+                <button class="btn btn--primary" type="button" id="shot-add-all" data-action="add-all-detected" hidden>一键全部加入清单</button>
+                <h4>手动补充（可选）</h4>
+                <div class="chip-group" id="shot-pick" role="group" aria-label="按图勾选食材"></div>
+                <p class="camera-hint">识别引擎在浏览器本地运行，照片不会上传；未联网或识别不到时，可对照照片手动点选补充，罕见食材请切到「文字输入」添加。</p>
+              </div>
+            </div>
+
+            <div class="entry-body" id="tab-voice" role="tabpanel">
+              <div class="voice-stage">
+                <button class="voice-btn" type="button" id="voice-btn">
+                  <svg class="mic-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+                  <span>开始语音录入</span>
+                  <span class="pulse" aria-hidden="true">●</span>
+                </button>
+                <p class="voice-status" id="voice-status" aria-live="polite"></p>
+                <p class="voice-note">
+                  <b>方言说明：</b>浏览器语音引擎默认按普通话识别——武汉话的口音用词（如「克马」「冇得」）可能识别不准。建议用普通话念出食材名（如「豆腐、西兰花」），方言专有说法请用文字输入补充，系统仍会把它加入食材清单。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="entry-panel">
+          <div class="entry-card">
+            <div class="stock-head">
+              <h3>现有食材清单</h3>
+              <div class="stock-badges">
+                <span class="badge-count">共 <b id="ing-count">0</b> 种</span>
+              </div>
+            </div>
+            <div class="ing-chips" id="ing-list" aria-live="polite"></div>
+            <p class="stock-empty" id="ing-empty">清单还是空的。用上方任意方式录入家里现有的食材，也可以点下面的快捷食材一键加入。</p>
+            <p class="entry-note-more">录入后点击「保存食材清单」，生成方案时将只使用清单内食材。</p>
+            <div class="entry-cta">
+              <button class="btn btn--primary" type="button" data-action="save-pantry">保存食材清单</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 方案生成工作区 ================= -->
+  <section class="section" id="plan" aria-labelledby="plan-title">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Step 3 · Plan engine</span>
+        <h2 id="plan-title">一键生成全家共享餐食方案</h2>
+        <p>基于家庭档案与现有食材自动完成饮食协调、营养校验与补位计算，10~30 秒内输出共享菜品、个人分餐与营养评估。</p>
+      </div>
+
+      <div class="flow" role="list" aria-label="使用流程">
+        <span role="listitem"><span>1</span>家庭档案</span>
+        <span role="listitem"><span>2</span>食材录入</span>
+        <span class="on" role="listitem"><span>3</span>生成方案</span>
+        <span role="listitem"><span>4</span>结果与采购</span>
+        <span role="listitem"><span>5</span>反馈与周报</span>
+      </div>
+
+      <div class="plan-gate" id="plan-gate">
+        <div class="gate-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.5 4.5L6 9l4.5 1.5L12 15l1.5-4.5L18 9l-4.5-1.5L12 3Z"/><path d="M5 16c2 1.5 5.5 1.5 7 0M5 20c2 1.5 5.5 1.5 7 0"/></svg>
+        </div>
+        <h3>准备就绪？点击生成今日全家餐单</h3>
+        <p>系统将综合每位成员的饮食规则与营养需求，协调出一桌全家共享的菜品。</p>
+        <div class="plan-check" id="plan-check"></div>
+        <button class="btn btn--primary btn--lg" type="button" data-action="generate-plan" id="plan-gen-btn">生成今日方案</button>
+        <div class="plan-generating" id="plan-loading" aria-live="polite">
+          <div class="spinner" aria-hidden="true"></div>
+          <span>正在协调菜品与营养校验…</span>
+          <span class="plan-msg">根据食材可用性匹配菜品模板 → 按成员规则分配分餐 → 计算营养素摄入与缺口</span>
+        </div>
+        <p class="plan-msg" style="margin-top:14px" id="plan-gate-note"></p>
+      </div>
+
+      <div class="plan-result" id="plan-result" aria-live="polite">
+        <div class="plan-tiers" id="plan-tiers"></div>
+
+        <!-- T6 反馈优化：标记实际制作菜品、食用分量、采购食材 -->
+        <div class="plan-tier fb-card" id="fb-card" style="display:none">
+          <div class="plan-tier-head"><span class="tno">★</span><h3>反馈优化（可选）</h3><span class="tsub">标记实际制作与食用情况，数据计入周度统计</span></div>
+          <div class="plan-tier-body">
+            <p class="fb-desc">勾选实际制作的菜品并选择家庭成员食用分量，系统据此累计本周营养数据；记录本次采购食材可完善采购闭环。</p>
+            <div class="fb-dishes" id="fb-dishes"></div>
+            <div class="fb-purchase-row">
+              <label for="fb-purchase">本次实际采购食材（用顿号分隔）：</label>
+              <input class="field-input" id="fb-purchase" type="text" autocomplete="off" placeholder="如：牛奶、牛肉、胡萝卜">
+            </div>
+            <div class="fb-actions">
+              <button class="btn btn--export" type="button" data-action="save-feedback">计入周度统计</button>
+              <span class="fb-tip" id="fb-tip"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- T6 每周营养分析报告 -->
+        <div class="plan-tier weekly-card" id="weekly-card" style="display:none">
+          <div class="plan-tier-head"><span class="tno">周</span><h3>每周营养分析报告</h3><span class="tsub">本周达标率 · 累计缺口 · 下周调整</span></div>
+          <div class="plan-tier-body">
+            <div class="weekly-toolbar">
+              <label class="auto-check"><input type="checkbox" id="weekly-auto"> 每周日自动生成</label>
+              <button class="btn btn--export" type="button" data-action="gen-weekly">生成本周营养报告</button>
+              <span class="fb-tip" id="weekly-tip"></span>
+            </div>
+            <div class="weekly-report" id="weekly-report"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 能力闭环 ================= -->
+  <section class="section section--band" id="loop" aria-labelledby="loop-title">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">One closed loop</span>
+        <h2 id="loop-title">围绕一家人吃饭这件事，形成完整闭环</h2>
+        <p>每一餐都不是孤立的——评估结果驱动采购建议，实际用餐数据沉淀为本周营养报告，再指导下一周的饮食调整。</p>
+      </div>
+      <div class="loop-grid">
+        <article class="loop-card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M12 3v18"/><path d="M7 8c0 2 2 2 2 4s-2 2-2 4M17 8c0 2-2 2-2 4s2 2 2 4"/></svg></div>
+          <h3>单日食谱</h3>
+          <p>共享菜品全部来自现有食材，一桌统一制作；每人按目标与体质分配分量，同步输出摄入优点与营养缺口。</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>共享菜品清单（全部取自现有食材）</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>个人分餐 + 优点 / 缺口双维度评估</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>核心营养素缺口百分比与补位计算</li>
+          </ul>
+        </article>
+        <article class="loop-card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"/><path d="M3 8h18v4a5 5 0 0 1-5 5h-8a5 5 0 0 1-5-5V8Z"/><path d="M12 13v6M8 19h8"/></svg></div>
+          <h3>智能采购补充</h3>
+          <p>当现有食材无法满足全家基础营养需求，或主菜不足2道时自动触发，按缺口优先级生成采购清单。</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>食材、对应补充营养素、建议采购量</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>优先匹配缺口最大的成员</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>一键导出本地表格，对照采购</li>
+          </ul>
+        </article>
+        <article class="loop-card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg></div>
+          <h3>每周营养管理</h3>
+          <p>基于本周实际标记的用餐数据自动统计，输出每位成员营养素达标率、累计缺口与超标项，指导下周调整。</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>蛋白 / 碳水 / 脂肪 / 维生素 / 矿物质达标率</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>本周问题总结（如钠超标20%、钙缺口2100mg）</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>下周分人调整方向与重点补充建议</li>
+          </ul>
+        </article>
+      </div>
+      <div class="loop-cta">
+        <b>闭环是真实跑通的，不是概念</b>
+        <span>每一步都有对应功能：本页就是可用的生成工具——建档、录食材、生成三层结果、采购清单、周报全在本页实现。点击下方按钮，从建立家庭档案开始体验完整闭环。</span>
+        <button class="btn btn--primary btn-icon" type="button" data-action="scroll-family">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          体验完整闭环 · 开始使用
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 了解产品 · 方案示例（演示效果） ================= -->
+  <section class="section" id="example" aria-labelledby="example-title">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Product demo</span>
+        <h2 id="example-title">了解产品 · 一次真实生成过程（演示）</h2>
+        <p>以下为产品介绍演示效果，展示一家四口示例输入下三层结果的样子，<b>并非正式生成输出</b>。正式使用请从上方「家庭档案 → 食材录入 → 生成方案」进入。</p>
+      </div>
+      <div class="demo-run">
+        <div>
+          <button class="btn btn--primary btn-icon" type="button" id="demo-run-btn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3Z"/></svg>
+            用真实引擎演示一次
+          </button>
+          <div style="margin-top:8px;font-size:12px;color:var(--ink-3)">点击后调用与正式生成完全一致的引擎，渲染示例家庭的三层结果</div>
+        </div>
+        <div class="demo-run-tip"><b>演示与正式生成是同一个引擎。</b>下方为静态效果图，点击按钮会用真实生成逻辑跑一遍示例家庭（健身爸爸 / 孕妈 / 8月龄宝宝 / 气虚高血压爷爷），结果标注「演示 · 真实引擎生成」。</div>
+      </div>
+      <div class="demo-live" id="demo-live" aria-live="polite"></div>
+      <div class="example-grid">
+        <div style="display:grid;gap:20px;align-content:start">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>输入食材</h3>
+              <span class="pill">全部来自现有</span>
+            </div>
+            <div class="panel-body">
+              <div class="ing-list">
+                <span class="ing-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>鸡胸肉</span>
+                <span class="ing-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>排骨</span>
+                <span class="ing-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>豆腐</span>
+                <span class="ing-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>西兰花</span>
+                <span class="ing-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>冬瓜</span>
+                <span class="ing-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>菠菜</span>
+                <span class="ing-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>鸡蛋</span>
+                <span class="ing-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>米类</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>① 全家共享菜品清单</h3>
+              <span class="pill">一桌统一制作</span>
+            </div>
+            <div class="panel-body">
+              <div class="dish-list">
+                <div class="dish-row"><span class="no">1</span><b>姜丝炒鸡胸肉</b><small>基础统一炒制 · 姜丝提味</small></div>
+                <div class="dish-row"><span class="no">2</span><b>去油排骨冬瓜汤</b><small>基础统一炖制 · 表层去油</small></div>
+                <div class="dish-row"><span class="no">3</span><b>清炒西兰花</b><small>基础统一炒制</small></div>
+                <div class="dish-row"><span class="no">4</span><b>清炒菠菜</b><small>基础统一炒制</small></div>
+                <div class="dish-row"><span class="no">5</span><b>嫩豆腐</b><small>统一蒸制 · 分两种形态处理</small></div>
+                <div class="dish-row"><span class="no">6</span><b>主食分档</b><small>同锅米出品：糙米饭 / 杂粮饭 / 软米饭 / 宝宝米汤</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>② 每人食用分配 + 双维度营养评估</h3>
+            <span class="pill">摄入优点 + 营养缺口</span>
+          </div>
+          <div class="panel-body">
+            <div class="people-grid">
+              <article class="person">
+                <div class="person-head">
+                  <span class="avatar">爸</span>
+                  <div><b>爸爸</b><small>健身增肌 · 体质偏寒</small></div>
+                </div>
+                <ul>
+                  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg>加大份鸡胸肉 + 西兰花 + 糙米饭 + 适量汤</li>
+                  <li class="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>蛋白/纤维/碳水配比符合增肌目标，姜丝中和寒性</li>
+                  <li class="gap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>维生素A约为每日推荐量65%，缺口约35%</li>
+                </ul>
+              </article>
+              <article class="person">
+                <div class="person-head">
+                  <span class="avatar">妈</span>
+                  <div><b>妈妈</b><small>孕妈 · 孕中期</small></div>
+                </div>
+                <ul>
+                  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg>适量鸡胸肉 + 足量菠菜 + 西兰花 + 杂粮饭 + 去油汤</li>
+                  <li class="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>蛋白质与膳食铁充足，油脂控制合理，符合孕中期要求</li>
+                  <li class="gap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>钙约为每日推荐量70%，缺口约300mg</li>
+                </ul>
+              </article>
+              <article class="person">
+                <div class="person-head">
+                  <span class="avatar">宝</span>
+                  <div><b>宝宝</b><small>8月龄 · 辅食期</small></div>
+                </div>
+                <ul>
+                  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg>豆腐泥 + 西兰花泥 + 冬瓜米汤（单独煮软打泥）</li>
+                  <li class="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>优质蛋白与维生素配比适龄，形态符合辅食要求</li>
+                  <li class="gap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>碳水能量密度不足，铁约为每日推荐量60%</li>
+                </ul>
+              </article>
+              <article class="person">
+                <div class="person-head">
+                  <span class="avatar">爷</span>
+                  <div><b>爷爷</b><small>气虚质 · 高血压倾向</small></div>
+                </div>
+                <ul>
+                  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg>少量鸡胸肉 + 软嫩豆腐 + 菠菜（少油少盐）+ 软米饭 + 多冬瓜汤</li>
+                  <li class="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>食材温软易消化，钠控制在推荐范围内，清淡温补</li>
+                  <li class="gap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>优质蛋白质略低，约为每日推荐量75%</li>
+                </ul>
+              </article>
+            </div>
+            <p class="example-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5.25 3.83 8.44 9 9 5.17-.56 9-3.75 9-9V7l-9-5Z"/><path d="M12 8v4M12 16h.01"/></svg>
+              ③ 分级补充建议：若核心食材缺失2种及以上，或单人均核心营养素缺口超40%，系统将自动生成优先采购清单，按优先级标注食材、对应补充营养素与建议采购量。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 采购触发 ================= -->
+  <section class="section section--band" id="rules" aria-labelledby="rules-title">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Smart shopping</span>
+        <h2 id="rules-title">采购建议何时触发、给什么</h2>
+        <p>不盲目补货：只在全家基础营养真的出现缺口，或这顿饭主菜不够时，才按优先级给出具体、可对照的采购清单。</p>
+      </div>
+      <div class="rule-grid">
+        <article class="rule-card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg></div>
+          <div>
+            <h3>营养缺口触发</h3>
+            <p>现有食材无法满足全家基础营养需求，核心营养素缺口超30%时自动触发，优先补齐缺口最大的成员。</p>
+            <span class="cond">触发条件：核心营养素缺口 &gt; 30%</span>
+          </div>
+        </article>
+        <article class="rule-card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M12 3v18"/><path d="M7 8c0 2 2 2 2 4s-2 2-2 4M17 8c0 2-2 2-2 4s2 2 2 4"/></svg></div>
+          <div>
+            <h3>主菜不足触发</h3>
+            <p>现有食材可构成的主菜种类不足2道时自动触发，保证一桌饭菜的完整度。</p>
+            <span class="cond">触发条件：主菜种类 &lt; 2 道</span>
+          </div>
+        </article>
+        <article class="rule-card rule-shop">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></div>
+          <div>
+            <h3>触发之后给什么：份份可对照的采购清单</h3>
+            <p class="rule-sub">每次触发都会产出下方结构的清单，可直接导出为本地表格对照采购；每条都标注补齐的是谁的缺口、补多少。</p>
+            <div class="rule-table-wrap">
+              <table class="rule-table">
+                <thead>
+                  <tr>
+                    <th>优先级</th>
+                    <th>建议采购食材</th>
+                    <th>补充营养素</th>
+                    <th>建议采购量</th>
+                    <th>优先补齐成员</th>
+                    <th>缺口比例</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td>猪肝 <span class="demo-tag">示例行</span></td>
+                    <td>铁、维生素A、维生素B12</td>
+                    <td>100g / 周</td>
+                    <td>宝宝（8月龄）</td>
+                    <td>铁缺口 40%</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td>牛奶 / 酸奶</td>
+                    <td>钙、优质蛋白</td>
+                    <td>250ml / 日</td>
+                    <td>妈妈（孕中期）</td>
+                    <td>钙缺口约 300mg</td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td>胡萝卜 / 南瓜</td>
+                    <td>维生素A</td>
+                    <td>200g / 周</td>
+                    <td>爸爸（健身增肌）</td>
+                    <td>维A缺口 35%</td>
+                  </tr>
+                  <tr>
+                    <td>4</td>
+                    <td>鱼肉 / 虾</td>
+                    <td>优质蛋白、DHA</td>
+                    <td>150g / 周</td>
+                    <td>爷爷（气虚质）</td>
+                    <td>蛋白缺口 25%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="rule-sub" style="margin:10px 0 0">生成方案后，若触发条件满足，采购清单会直接出现在方案结果的第三层；上述为该清单的真实结构与数据样式。</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CTA ================= -->
+  <section class="section" aria-label="开始使用">
+    <div class="container">
+      <div class="cta-band">
+        <h2>从今天的冰箱开始，让一家人吃得更合适</h2>
+        <p>建立家庭档案、录入手头食材，10–30秒拿到全家共享餐单与每个人的营养评估。每周自动汇总，越用越懂这一家人的口与需。</p>
+        <button class="btn btn--lg" type="button" data-action="scroll-family">开始使用 · 建立家庭档案</button>
+        <p class="mini">无需注册登录 · 浏览器直接打开 · 数据留存于本机</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span class="brand"><span class="logo" style="width:26px;height:26px;border-radius:8px" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3a7 7 0 0 0-7 7c0 4.4 3.1 8 7 8s7-3.6 7-8a7 7 0 0 0-7-7Z"/><path d="M11 21v-3"/></svg></span>家味</span>
+    <p style="font-size:13px;color:var(--ink-3)">家庭AI食谱推荐系统 · 单日食谱—采购补充—长期管理闭环</p>
+    <div class="legal">
+      <span>营养数据为示例估算，仅供参考，不构成医疗建议</span>
+      <span>适合全家共享的每一餐</span>
+    </div>
+  </div>
+</footer>
+
+<div id="toast-region" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- T7 本地持久化（localStorage dot 前缀，异常时静默降级为无存储） ---------- */
+  const LS = {
+    prefix: "jiawei_fai_v1_",
+    set: function (key, val) {
+      try { window.localStorage.setItem(this.prefix + key, JSON.stringify(val)); } catch (e) { /* 隐私模式/禁用存储时降级 */ }
+    },
+    get: function (key) {
+      try {
+        var raw = window.localStorage.getItem(this.prefix + key);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) { return null; }
+    },
+    del: function (key) {
+      try { window.localStorage.removeItem(this.prefix + key); } catch (e) { /* 忽略 */ }
+    }
+  };
+
+  /* ---------- 内存状态（UI 即时态；业务数据由 T7 本地存储持久化） ---------- */
+  const store = createMemoryStore({
+    menuOpen: false,
+    toastQueue: [],
+  }, ["familyMembers"]);
+
+  /* 食材仓（内存态 + 持久化），提前声明以便全模块（含 renderFamily 早期刷新）安全引用 */
+  var pantry = createMemoryStore({ items: [], dirty: false }, ["items"]);
+
+  function createMemoryStore(initial, persistFields) {
+    let state = Object.assign({}, initial);
+    // 从本地存储恢复持久化字段（T7 hydrate）
+    if (persistFields && Array.isArray(persistFields)) {
+      persistFields.forEach(function (k) {
+        var saved = LS.get(k);
+        if (saved !== null && saved !== undefined) state[k] = saved;
+      });
+    }
+    const listeners = new Set();
+    return {
+      get: function (key) { return key === undefined ? state : state[key]; },
+      set: function (patch) {
+        state = Object.assign({}, state, patch);
+        listeners.forEach(function (l) { l(state); });
+        if (persistFields) {
+          persistFields.forEach(function (k) {
+            if (k in patch) LS.set(k, state[k]);
+          });
+        }
+      },
+      subscribe: function (listener) { listeners.add(listener); return function () { listeners.delete(listener); }; },
+    };
+  }
+
+  /* ---------- Toast ---------- */
+  function toast(message, kind) {
+    const region = document.getElementById("toast-region");
+    if (!region) return;
+    const el = document.createElement("div");
+    el.className = "toast" + (kind === "warn" ? " toast--warn" : "");
+    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+      (kind === "warn"
+        ? '<path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/>'
+        : '<path d="m5 13 4 4L19 7"/>') +
+      "</svg><span></span>";
+    el.querySelector("span").textContent = message;
+    region.appendChild(el);
+    window.setTimeout(function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 3200);
+  }
+
+  /* ---------- 移动端菜单 ---------- */
+  const menuBtn = document.querySelector('[data-action="toggle-menu"]');
+  const mobileMenu = document.getElementById("mobile-menu");
+  function setMenu(open) {
+    store.set({ menuOpen: open });
+    if (menuBtn) { menuBtn.setAttribute("aria-expanded", String(open)); }
+    if (mobileMenu) { mobileMenu.hidden = !open; }
+  }
+  if (menuBtn) {
+    menuBtn.addEventListener("click", function () {
+      setMenu(!store.get("menuOpen"));
+    });
+  }
+  if (mobileMenu) {
+    mobileMenu.addEventListener("click", function (ev) {
+      if (ev.target.closest("a,button")) setMenu(false);
+    });
+  }
+
+  /* ---------- 主页按钮 ---------- */
+  document.querySelectorAll("[data-action='scroll-family']").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const target = document.getElementById("family");
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+  document.querySelectorAll("[data-action='scroll-steps']").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const target = document.getElementById("steps");
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+  document.querySelectorAll("[data-action='scroll-pantry']").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const target = document.getElementById("pantry");
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+  document.querySelectorAll("[data-action='scroll-plan']").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const target = document.getElementById("plan");
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  /* ---------- 吸顶导航阴影（滚动后） ---------- */
+  const nav = document.getElementById("topnav");
+  if (nav) {
+    const onScroll = function () {
+      nav.classList.toggle("is-scrolled", window.scrollY > 8);
+    };
+    // 简单视觉反馈：滚动时略微加深边框
+    const styleEl = document.createElement("style");
+    styleEl.textContent = ".nav.is-scrolled{border-bottom-color:var(--line-strong);box-shadow:0 2px 12px rgba(26,29,23,.05)}";
+    document.head.appendChild(styleEl);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+
+  /* ---------- 轻量滚动入场（reduced-motion 下自动跳过） ---------- */
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+      "IntersectionObserver" in window) {
+    const revealEls = document.querySelectorAll(".step,.loop-card,.rule-card");
+    const io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = "1";
+          entry.target.style.transform = "none";
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(function (el) {
+      el.style.opacity = "0";
+      el.style.transform = "translateY(10px)";
+      el.style.transition = "opacity .3s ease-out, transform .3s ease-out, box-shadow .15s ease";
+      io.observe(el);
+    });
+  }
+
+  /* ============================================================
+    家庭档案模块（Step 1）
+    数据：store.familyMembers、store.editMemberId
+    ============================================================ */
+  const FAMILY_STORE_KEY = "familyMembers";
+  const EDIT_KEY = "editMemberId";
+
+  /* 饮食规则字典：标签 → { traits/health/constitution/allergy 匹配项, 说明 } */
+  const DIET_RULES = [
+    { id: "muscle",   label: "高蛋白增肌",        match: { traits: ["muscle"] }, tip: "加大优质蛋白份量，配足膳食纤维与复合碳水" },
+    { id: "pregnant", label: "孕期均衡营养",      match: { traits: ["pregnant"] }, tip: "保证蛋白质与铁、钙摄入，控制油脂与盐分" },
+    { id: "baby",     label: "辅食分档",          match: { traits: ["baby-food"] }, tip: "软烂打泥、原味无盐，铁强化与能量密度优先" },
+    { id: "low-salt", label: "少盐控钠",          match: { health: ["hypertension"] }, tip: "日均钠控制在推荐范围内，少腌制、多蒸煮" },
+    { id: "low-sugar",label: "控糖低GI",         match: { health: ["diabetes"] }, tip: "优选低GI主食，控制精制糖与糊化程度" },
+    { id: "low-fat",  label: "低脂清淡",          match: { health: ["hyperlipidemia"] }, tip: "减少油脂与胆固醇，多用蒸、煮、炖" },
+    { id: "iron",     label: "补铁优先",          match: { health: ["anemia"] }, tip: "搭配红肉、动物血与富含维C蔬菜促吸收" },
+    { id: "protein",  label: "优质蛋白补充",      match: { health: ["low-protein"] }, tip: "每餐安排优质蛋白，优先鱼禽蛋奶豆" },
+    { id: "calcium",  label: "补钙强化",          match: { health: ["low-calcium"] }, tip: "增加奶类、豆制品与绿叶菜，必要时补钙" },
+    { id: "vit-a",    label: "补充维生素A",       match: { health: ["low-vita"] }, tip: "增加橙黄蔬果与动物肝脏类食材" },
+    { id: "warm",     label: "温补调和",          match: { constitution: ["cold"] }, tip: "姜、胡椒等温性佐料中和食材寒性" },
+    { id: "qi",       label: "益气易消化",        match: { constitution: ["qi-deficiency"] }, tip: "温软易消化，少油少盐清淡温补" },
+    { id: "dry",      label: "滋阴润燥",          match: { constitution: ["yin-deficiency"] }, tip: "多汤羹与滋润食材，避免辛辣燥热" },
+    { id: "damp",     label: "健脾祛湿",          match: { constitution: ["dampness"] }, tip: "冬瓜、薏米等利湿食材，少生冷甜腻" },
+    { id: "heat",     label: "清热平和",          match: { constitution: ["hot"] }, tip: "清淡少辛，多选凉性平和食材" },
+    { id: "stomach",  label: "养胃温和",          match: { constitution: ["stomach"] }, tip: "细软温食，避免过硬过冷与刺激性调味" },
+  ];
+
+  /* 可选项配置（表单渲染用） */
+  const OPTIONS = {
+    roleLabels: { adult: "成人", elders: "长辈（60岁以上）", child: "儿童（3-12岁）", teen: "青少年（13-17岁）", baby: "婴幼儿（0-3岁）", pregnant: "孕妈妈" },
+    traits: [
+      { value: "muscle",    label: "健身增肌" },
+      { value: "pregnant",  label: "孕期营养" },
+      { value: "baby-food", label: "辅食期" },
+      { value: "vegetarian",label: "素食倾向" },
+      { value: "weight",    label: "控制体重" },
+      { value: "aging",     label: "老年营养" },
+    ],
+    health: [
+      { value: "hypertension", label: "血压偏高" },
+      { value: "diabetes",     label: "血糖偏高" },
+      { value: "hyperlipidemia", label: "血脂偏高" },
+      { value: "anemia",       label: "贫血倾向" },
+      { value: "low-protein",  label: "优质蛋白不足" },
+      { value: "low-calcium",  label: "钙摄入不足" },
+      { value: "low-vita",     label: "维生素A不足" },
+    ],
+    constitution: [
+      { value: "cold",         label: "体质偏寒" },
+      { value: "hot",          label: "体质偏热" },
+      { value: "qi-deficiency",label: "气虚质" },
+      { value: "yin-deficiency",label: "阴虚质" },
+      { value: "dampness",     label: "痰湿/湿热" },
+      { value: "stomach",      label: "脾胃虚寒" },
+    ],
+    allergies: [
+      { value: "seafood",  label: "海鲜" },
+      { value: "nuts",     label: "花生/坚果" },
+      { value: "milk",     label: "牛奶/乳糖" },
+      { value: "egg",      label: "鸡蛋" },
+      { value: "soy",      label: "大豆" },
+      { value: "gluten",   label: "麸质/小麦" },
+      { value: "spicy",    label: "辛辣" },
+      { value: "nightshade",label: "番茄/茄果" },
+    ],
+  };
+
+  function getFamilyMembers() { return store.get(FAMILY_STORE_KEY) || []; }
+
+  /* ---------- 规则匹配引擎 ---------- */
+  function matchRules(member) {
+    const tags = [];
+    DIET_RULES.forEach(function (rule) {
+      let hit = false;
+      Object.keys(rule.match).forEach(function (dim) {
+        const wanted = rule.match[dim];
+        const owned = member[dim] || [];
+        if (wanted.some(function (w) { return owned.indexOf(w) !== -1; })) hit = true;
+      });
+      if (hit) tags.push(rule);
+    });
+    return tags;
+  }
+
+  /* ---------- 表单渲染 ---------- */
+  const CHIP_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>';
+  function renderChipGroup(containerId, groupKey, selected) {
+    const box = document.getElementById(containerId);
+    if (!box) return;
+    box.innerHTML = "";
+    const std = OPTIONS[groupKey] || [];
+    const stdVals = {};
+    std.forEach(function (opt) { stdVals[opt.value] = true; });
+    /* 拆分：标准选项 vs 自定义词（历史数据或“其他”输入框产生的非标准值） */
+    const selStd = [];
+    const customWords = [];
+    (selected || []).forEach(function (v) {
+      if (stdVals[v]) selStd.push(v); else customWords.push(v);
+    });
+    std.forEach(function (opt) {
+      const id = containerId + "-" + opt.value;
+      const lab = document.createElement("label");
+      lab.className = "chip-opt";
+      const inp = document.createElement("input");
+      inp.type = "checkbox";
+      inp.value = opt.value;
+      inp.id = id;
+      if (selStd.indexOf(opt.value) !== -1) inp.checked = true;
+      const ck = document.createElement("span");
+      ck.className = "ck";
+      ck.innerHTML = CHIP_SVG;
+      const txt = document.createElement("span");
+      txt.className = "txt";
+      txt.textContent = opt.label;
+      lab.appendChild(inp); lab.appendChild(ck); lab.appendChild(txt);
+      box.appendChild(lab);
+    });
+    /* “其他”自定义入口：勾选后显示输入框，支持多个自定义项 */
+    const otherLab = document.createElement("label");
+    otherLab.className = "chip-opt";
+    const otherInpCk = document.createElement("input");
+    otherInpCk.type = "checkbox";
+    otherInpCk.value = "__other__";
+    otherInpCk.id = containerId + "-other";
+    if (customWords.length) otherInpCk.checked = true;
+    const ck2 = document.createElement("span");
+    ck2.className = "ck";
+    ck2.innerHTML = CHIP_SVG;
+    const txt2 = document.createElement("span");
+    txt2.className = "txt";
+    txt2.textContent = "其他…";
+    otherLab.appendChild(otherInpCk); otherLab.appendChild(ck2); otherLab.appendChild(txt2);
+    box.appendChild(otherLab);
+    const otherInp = document.createElement("input");
+    otherInp.type = "text";
+    otherInp.className = "chip-other-inp";
+    otherInp.id = containerId + "-other-inp";
+    otherInp.placeholder = "填写自定义项，多个用顿号或逗号隔开";
+    otherInp.value = customWords.join("、");
+    otherInp.hidden = customWords.length === 0;
+    box.appendChild(otherInp);
+    otherInpCk.addEventListener("change", function () {
+      otherInp.hidden = !otherInpCk.checked;
+      if (otherInpCk.checked) otherInp.focus();
+    });
+  }
+
+  function openMemberForm(memberOrNull) {
+    const form = document.getElementById("member-form");
+    if (!form) return;
+    form.hidden = false;
+    document.getElementById("member-form-title").textContent = memberOrNull ? "编辑成员" : "添加成员";
+    document.getElementById("member-form-sub").textContent = memberOrNull
+      ? "调整档案后将按最新信息重新匹配饮食规则" : "勾选内容越准确，后续营养评估越贴合个人需要";
+    document.getElementById("mf-id").value = memberOrNull ? memberOrNull.id : "";
+    document.getElementById("mf-name").value = memberOrNull ? memberOrNull.name : "";
+    document.getElementById("mf-role").value = memberOrNull ? (memberOrNull.role || "") : "";
+    document.getElementById("mf-avoid").value = memberOrNull ? (memberOrNull.avoid || "") : "";
+    renderChipGroup("mf-traits", "traits", (memberOrNull && memberOrNull.traits) || []);
+    renderChipGroup("mf-health", "health", (memberOrNull && memberOrNull.health) || []);
+    renderChipGroup("mf-constitution", "constitution", (memberOrNull && memberOrNull.constitution) || []);
+    renderChipGroup("mf-allergies", "allergies", (memberOrNull && memberOrNull.allergies) || []);
+    hideFormError();
+    /* 窄视口下单列布局：等待 hidden 解除后把表单滚进可视区，避免表单在视口外 */
+    if (window.matchMedia("(max-width:1080px)").matches) {
+      window.setTimeout(function () {
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+    }
+    document.getElementById("mf-name").focus();
+  }
+
+  function closeMemberForm() {
+    const form = document.getElementById("member-form");
+    if (form) form.hidden = true;
+    store.set({ [EDIT_KEY]: null });
+  }
+
+  function showFormError(msg) {
+    const el = document.getElementById("member-form-error");
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add("show");
+  }
+  function hideFormError() {
+    const el = document.getElementById("member-form-error");
+    if (el) el.classList.remove("show");
+  }
+
+  function readChips(containerId) {
+    const box = document.getElementById(containerId);
+    if (!box) return [];
+    const out = [];
+    box.querySelectorAll("input:checked").forEach(function (inp) { if (inp.value !== "__other__") out.push(inp.value); });
+    /* 并入“其他…”自定义项（顿号/逗号分隔，可多词，无数量上限） */
+    const otherCk = document.getElementById(containerId + "-other");
+    const otherInp = document.getElementById(containerId + "-other-inp");
+    if (otherCk && otherCk.checked && otherInp && otherInp.value.trim()) {
+      String(otherInp.value.trim()).split(/[、,，;；]/).map(function (s) { return s.trim(); }).forEach(function (w) {
+        if (w && out.indexOf(w) === -1) out.push(w);
+      });
+    }
+    return out;
+  }
+
+  function saveMember(ev) {
+    if (ev && ev.preventDefault) ev.preventDefault();
+    const name = document.getElementById("mf-name").value.trim();
+    if (!name) {
+      showFormError("请填写成员姓名或称呼（如：爸爸、宝宝）");
+      toast("请先填写成员姓名或称呼", "warn");
+      const form = document.getElementById("member-form");
+      if (form && window.matchMedia("(max-width:1080px)").matches) {
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      document.getElementById("mf-name").focus();
+      return;
+    }
+    const id = document.getElementById("mf-id").value;
+    const member = {
+      id: id || ("m" + Date.now() + "-" + Math.random().toString(36).slice(2, 8)),
+      name: name,
+      role: document.getElementById("mf-role").value,
+      traits: readChips("mf-traits"),
+      health: readChips("mf-health"),
+      constitution: readChips("mf-constitution"),
+      allergies: readChips("mf-allergies"),
+      avoid: document.getElementById("mf-avoid").value.trim(),
+    };
+    const members = getFamilyMembers();
+    const idx = members.findIndex(function (m) { return m.id === member.id; });
+    if (idx !== -1) { members[idx] = member; } else { members.push(member); }
+    store.set({ [FAMILY_STORE_KEY]: members, [EDIT_KEY]: null });
+    renderFamily();
+    closeMemberForm();
+    toast(idx !== -1 ? "已更新「" + name + "」的档案" : "已添加「" + name + "」并自动匹配饮食规则");
+  }
+
+  function deleteMember(id) {
+    const members = getFamilyMembers().filter(function (m) { return m.id !== id; });
+    store.set({ [FAMILY_STORE_KEY]: members, [EDIT_KEY]: null });
+    renderFamily();
+    toast("已移除该成员", "warn");
+  }
+
+  const AVATAR_ROLE = { adult: "成", elders: "长", child: "童", teen: "青", baby: "宝", pregnant: "孕" };
+  function avatarClass(member) {
+    if (member.role === "baby") return "baby";
+    if (member.role === "pregnant" || member.role === "elders") return "alt";
+    return "";
+  }
+
+  function renderFamily() {
+    const list = document.getElementById("member-list");
+    if (!list) return;
+    const members = getFamilyMembers();
+    document.getElementById("member-count").textContent = String(members.length);
+    list.innerHTML = "";
+    document.getElementById("member-empty").style.display = members.length ? "none" : "";
+    members.forEach(function (member) {
+      const rules = matchRules(member);
+      const card = document.createElement("article");
+      card.className = "member-card";
+      card.dataset.memberId = member.id;
+      const avatarTxt = member.name ? member.name.charAt(0) : "亲";
+      let rulesHtml = "";
+      if (rules.length) {
+        rulesHtml = '<div class="rule-tags mc-rules">' + rules.map(function (r) {
+          return '<span class="rule-tag" title="' + r.tip + '">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>' + r.label + "</span>";
+        }).join("") + "</div>";
+        rulesHtml += '<p class="mc-role" style="font-size:12px">' + rules.map(function (r) { return r.tip; }).join(" · ") + "</p>";
+      } else {
+        rulesHtml = '<p class="mc-role">未命中专项规则，按家庭均衡基准配餐</p>';
+      }
+      const avoidParts = (member.allergies || []).map(function (a) {
+        const found = OPTIONS.allergies.filter(function (o) { return o.value === a; })[0];
+        return found ? found.label : a;
+      });
+      if (member.avoid) avoidParts.push(member.avoid);
+      let avoidHtml = "";
+      if (avoidParts.length) {
+        const shown = avoidParts.slice(0, 3).join("、");
+        const more = avoidParts.length > 3 ? " 等共 " + avoidParts.length + " 项（已保存，编辑可查看全部）" : "";
+        avoidHtml = '<p class="avoid-line">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>' +
+          "忌口：" + shown + more + "</p>";
+      }
+      const roleLabel = member.role
+        ? (OPTIONS.roleLabels ? OPTIONS.roleLabels[member.role] : "") : "";
+      card.innerHTML =
+        '<div class="mc-head">' +
+          '<span class="avatar ' + avatarClass(member) + '">' + avatarTxt + "</span>" +
+          '<div><div class="mc-name">' + escapeHtml(member.name) + "</div>" +
+          '<div class="mc-role">' + (roleLabel || "家庭成员") + "</div></div>" +
+        "</div>" +
+        rulesHtml +
+        avoidHtml +
+        '<div class="mc-actions">' +
+          '<button class="btn btn--ghost" type="button" data-action="edit-member" data-id="' + member.id + '">编辑</button>' +
+          '<button class="btn btn--danger" type="button" data-action="delete-member" data-id="' + member.id + '">删除</button>' +
+        "</div>";
+      list.appendChild(card);
+    });
+    renderPlanCheck();
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------- 事件绑定 ---------- */
+  document.addEventListener("click", function (ev) {
+    const addBtn = ev.target.closest("[data-action='add-member']");
+    if (addBtn) { openMemberForm(null); return; }
+    const cancelBtn = ev.target.closest("[data-action='cancel-member']");
+    if (cancelBtn) { closeMemberForm(); return; }
+    const editBtn = ev.target.closest("[data-action='edit-member']");
+    if (editBtn) {
+      const id = editBtn.getAttribute("data-id");
+      const member = getFamilyMembers().filter(function (m) { return m.id === id; })[0];
+      if (member) openMemberForm(member);
+      return;
+    }
+    const delBtn = ev.target.closest("[data-action='delete-member']");
+    if (delBtn) {
+      const btn = delBtn;
+      if (btn.classList.contains("btn--danger-solid")) {
+        deleteMember(btn.getAttribute("data-id"));
+      } else {
+        btn.classList.add("btn--danger-solid");
+        btn.textContent = "确认删除？";
+        const id = btn.getAttribute("data-id");
+        window.setTimeout(function () {
+          // 若 2.5 秒内未二次点击则还原
+          const fresh = document.querySelector("[data-action='delete-member'][data-id='" + id + "']");
+          if (fresh && fresh.classList.contains("btn--danger-solid")) {
+            fresh.classList.remove("btn--danger-solid");
+            fresh.textContent = "删除";
+          }
+        }, 2500);
+      }
+      return;
+    }
+  });
+
+  const memberForm = document.getElementById("member-form-fields");
+  if (memberForm) memberForm.addEventListener("submit", saveMember);
+
+  renderFamily();
+  window.__FAMILY_READY__ = true;
+
+  /* ---------- 食材录入（Step 2） ---------- */
+  var FOOD_LIB = [
+    "鸡胸肉","鸡腿肉","整鸡","排骨","五花肉","里脊","瘦肉","牛肉","羊肉","猪肝",
+    "鸡蛋","鸭蛋","牛奶","酸奶","奶酪","豆腐","香干","豆皮","豆浆","腐竹",
+    "草鱼","鲫鱼","鲈鱼","带鱼","虾","虾仁","蛤蜊","鱿鱼",
+    "西兰花","菠菜","冬瓜","白菜","青菜","油麦菜","生菜","芹菜","韭菜","黄瓜","西红柿","茄子","青椒","彩椒","胡萝卜","白萝卜","土豆","山药","南瓜","玉米","红薯","莲藕","芋头","芦笋","豆角","豌豆","荷兰豆","花菜","卷心菜","娃娃菜","空心菜","苋菜","上海青","蒜苔","洋葱","大蒜","姜","葱","香菜","香菇","平菇","金针菇","木耳","银耳","海带","紫菜",
+    "苹果","香蕉","橙子","橘子","梨","葡萄","草莓","蓝莓","猕猴桃","火龙果","芒果","西瓜","哈密瓜","桃","李子","杏","樱桃","柚子","柠檬",
+    "大米","糙米","小米","黑米","糯米","燕麦","藜麦","红豆","绿豆","黑豆","黄豆","花生","芝麻","核桃","红枣","枸杞","面条","挂面","馒头","面粉","饺子皮","馄饨皮",
+    "盐","酱油","生抽","老抽","醋","白糖","红糖","蜂蜜","料酒","蚝油","香油","橄榄油","花生油","玉米油","辣椒","花椒","八角","桂皮","香叶","孜然","胡椒粉","十三香","淀粉","酵母","番茄酱","豆瓣酱","甜面酱","沙拉酱","咖喱","紫菜"
+  ];
+  var FOOD_COMMON = [
+    "鸡胸肉","鸡蛋","排骨","五花肉","瘦肉","牛肉","虾","豆腐","牛奶","酸奶",
+    "西兰花","菠菜","冬瓜","白菜","青菜","黄瓜","西红柿","胡萝卜","土豆","南瓜",
+    "玉米","红薯","香菇","木耳","海带","紫菜","苹果","香蕉","橙子",
+    "大米","糙米","小米","燕麦","面条","面粉","花生","红枣","枸杞","葱姜蒜","酱油","醋","盐"
+  ];
+  var ingText = document.getElementById("ing-text");
+  var ingList = document.getElementById("ing-list");
+  var ingEmpty = document.getElementById("ing-empty");
+  var ingCount = document.getElementById("ing-count");
+
+  function pantryItems() { return pantry.get("items"); }
+
+  function addPantryItems(names, source) {
+    var items = pantryItems().slice();
+    var added = 0, skipped = 0;
+    (names || []).forEach(function (name) {
+      name = String(name).replace(/^[\s\u3000]+|[\s\u3000]+$/g, "");
+      if (!name) return;
+      var dup = items.some(function (it) { return it.name === name; });
+      if (dup) { skipped++; return; }
+      items.push({ name: name, source: source || "text", id: "ing-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7) });
+      added++;
+    });
+    pantry.set({ items: items, dirty: true });
+    renderPantry();
+    if (added > 0 && skipped > 0) {
+      toast("已添加 " + added + " 种，跳过 " + skipped + " 种重复食材");
+    } else if (added > 0) {
+      toast("已添加 " + added + " 种食材");
+    } else if (skipped > 0) {
+      toast("这些食材已在清单中", "warn");
+    }
+    return added;
+  }
+
+  function renderPantry() {
+    var items = pantryItems();
+    ingCount.textContent = String(items.length);
+    if (!items.length) {
+      ingList.innerHTML = "";
+      ingEmpty.style.display = "block";
+      renderPlanCheck();
+      return;
+    }
+    ingEmpty.style.display = "none";
+    ingList.innerHTML = items.map(function (it) {
+      var srcLabel = { text: "文字", photo: "拍照", voice: "语音", suggest: "快捷" }[it.source] || "文字";
+      return '<span class="ing-chip">' + escapeHtml(it.name) +
+        '<span class="src">' + srcLabel + "</span>" +
+        '<button class="del" type="button" data-action="del-ing" data-id="' + it.id + '" aria-label="删除 ' + escapeHtml(it.name) + '">×</button></span>';
+    }).join("");
+    renderPlanCheck();
+  }
+
+  function renderSuggest() {
+    var box = document.getElementById("ing-suggest");
+    if (!box) return;
+    box.innerHTML = FOOD_COMMON.map(function (n) {
+      return '<button class="suggest-chip" type="button" data-action="add-ing-suggest" data-name="' + escapeHtml(n) + '">+' + escapeHtml(n) + "</button>";
+    }).join("");
+  }
+
+  function parseIngText(str) {
+    return String(str || "").split(/[,，、;；\s]+/).map(function (s) {
+      return s.replace(/^\u3000+|\u3000+$/g, "").trim();
+    }).filter(Boolean);
+  }
+
+  /* 语音识别（浏览器原生 Web Speech API） */
+  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var voiceBtn = document.getElementById("voice-btn");
+  var voiceStatus = document.getElementById("voice-status");
+  var voiceReco = null, voiceListening = false;
+
+  function voiceSupported() { return !!SpeechRec; }
+
+  function setVoiceStatus(text, cls) {
+    if (!voiceStatus) return;
+    voiceStatus.textContent = text || "";
+    voiceStatus.className = "voice-status" + (cls ? " " + cls : "");
+  }
+
+  function startVoice() {
+    if (!SpeechRec) {
+      setVoiceStatus("当前浏览器不支持语音识别，请直接用文字输入。", "");
+      toast("浏览器不支持语音识别", "warn");
+      return;
+    }
+    if (voiceListening) return;
+    try {
+      voiceReco = new SpeechRec();
+      voiceReco.lang = "zh-CN";
+      voiceReco.interimResults = false;
+      voiceReco.maxAlternatives = 1;
+    } catch (e) {
+      setVoiceStatus("无法启动语音识别，请用文字输入。", "");
+      return;
+    }
+    voiceListening = true;
+    voiceBtn.classList.add("recording");
+    setVoiceStatus("正在聆听，请用普通话念出食材名（如：豆腐、西兰花）……", "busy");
+    voiceReco.onresult = function (ev) {
+      var transcript = "";
+      for (var i = 0; i < ev.results.length; i++) transcript += ev.results[i][0].transcript;
+      transcript = transcript.replace(/[。，、\s]+$/, "");
+      setVoiceStatus("识别到：" + transcript, "transcript");
+      var names = parseIngText(transcript);
+      if (names.length) {
+        addPantryItems(names, "voice");
+      } else {
+        toast("未识别出食材，请重试或用文字输入", "warn");
+      }
+    };
+    voiceReco.onerror = function (ev) {
+      var msg = { "not-allowed": "麦克风权限被拒绝，请在浏览器设置中允许后重试", "no-speech": "没有听到声音，请重试", "network": "语音服务不可用，请稍后重试", "aborted": "识别已取消" }[ev.error] || "语音识别出错（" + ev.error + "）";
+      setVoiceStatus(msg, "");
+      toast("语音录入失败：" + msg, "warn");
+    };
+    voiceReco.onend = function () {
+      voiceListening = false;
+      voiceBtn.classList.remove("recording");
+      if (!voiceStatus.textContent) setVoiceStatus("识别结束。", "");
+    };
+    try { voiceReco.start(); } catch (e) {
+      voiceListening = false;
+      voiceBtn.classList.remove("recording");
+      setVoiceStatus("语音识别启动失败，请用文字输入。", "");
+    }
+  }
+
+  /* 拍照识别：浏览器内真实 OCR（tesseract.js @ CDN，本地运行、免密钥） */
+  var photoInput = document.getElementById("ing-photo");
+  var shotPreview = document.getElementById("shot-preview");
+  var shotResult = document.getElementById("shot-detect-result");
+  var shotPick = document.getElementById("shot-pick");
+  var shotDetected = document.getElementById("shot-detected");
+  var shotOcrStatus = document.getElementById("shot-ocr-status");
+  var shotRaw = document.getElementById("shot-raw");
+  var shotAddAll = document.getElementById("shot-add-all");
+  var _ocrLoaded = false, _workerCache = null, _ocrPoolBuilt = false;
+  var OCR_POOL = [];
+
+  /* 食材名匹配池：收录常见食材 + 营养库食材，避免 OCR 空格拆字漏匹配。
+     惰性构建：FOOD_DB 在脚本后段才赋值，交互时再合并（排除单字词避免误报） */
+  function ensureOcrPool() {
+    if (_ocrPoolBuilt) return;
+    _ocrPoolBuilt = true;
+    var seen = {};
+    FOOD_COMMON.concat(Object.keys(FOOD_DB || {})).forEach(function (n) {
+      if (!seen[n] && n && n.length > 1) { seen[n] = 1; OCR_POOL.push(n); }
+    });
+    OCR_POOL.sort(function (a, b) { return b.length - a.length; }); // 长词优先（如"西兰花"先于"兰花"）
+  }
+
+  function loadOcrEngine() {
+    if (_ocrLoaded) return Promise.resolve(true);
+    if (window.Tesseract) { _ocrLoaded = true; return Promise.resolve(true); }
+    return new Promise(function (resolve) {
+      var s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+      s.onload = function () { _ocrLoaded = !!window.Tesseract; resolve(_ocrLoaded); };
+      s.onerror = function () { _ocrLoaded = false; resolve(false); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function getOcrWorker() {
+    if (_workerCache) return Promise.resolve(_workerCache);
+    return Tesseract.createWorker("chi_sim", 1, {
+      logger: function (m) {
+        if (shotOcrStatus && m.status === "recognizing text") shotOcrStatus.textContent = "正在识别文字……";
+      }
+    }).then(function (w) { _workerCache = w; return w; });
+  }
+
+  /* 把识别文本转成食材名：去空格后按食材池逐词匹配 */
+  function matchOcrText(text) {
+    ensureOcrPool();
+    var compact = String(text || "").replace(/[\s\u3000]/g, "");
+    var hits = [], used = "";
+    OCR_POOL.forEach(function (n) {
+      if (!n) return;
+      if (compact.indexOf(n) > -1 && used.indexOf(n) === -1) { hits.push(n); used += n; }
+    });
+    return hits;
+  }
+
+  function renderShotPick() {
+    if (!shotPick) return;
+    shotPick.innerHTML = FOOD_COMMON.map(function (n) {
+      return '<label class="chip-opt"><input type="checkbox" value="' + escapeHtml(n) + '"><span class="ck" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span><span class="txt">' + escapeHtml(n) + "</span></label>";
+    }).join("");
+    shotPick.querySelectorAll("input[type=checkbox]").forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var names = shotPick.querySelectorAll("input:checked");
+        var picked = Array.prototype.map.call(names, function (el) { return el.value; });
+        if (picked.length) {
+          addPantryItems(picked, "photo");
+          shotPick.querySelectorAll("input:checked").forEach(function (el) { el.checked = false; });
+          toast("已加入清单");
+        }
+      });
+    });
+  }
+
+  /* 展示识别出的食材为可勾选芯片，点选即加入（也可一键全加） */
+  function renderDetected(hits, rawText) {
+    if (!shotDetected) return;
+    if (hits.length) {
+      shotDetected.innerHTML = hits.map(function (n) {
+        return '<label class="chip-opt"><input type="checkbox" value="' + escapeHtml(n) + '" checked><span class="ck" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span><span class="txt">' + escapeHtml(n) + "</span></label>";
+      }).join("");
+      var off = shotDetected.querySelectorAll("input:not(:checked)");
+      if (off.length) off.forEach(function (el) { el.closest("label").style.opacity = "0.55"; });
+      shotDetected.querySelectorAll("input[type=checkbox]").forEach(function (cb) {
+        cb.addEventListener("change", function () {
+          cb.closest("label").style.opacity = cb.checked ? "" : "0.55";
+        });
+      });
+      shotOcrStatus.textContent = "识别到 " + hits.length + " 种食材：勾选要加入清单的项，或直接一键全部加入。";
+      shotOcrStatus.style.color = "var(--ok, #2e7d32)";
+      if (shotAddAll) { shotAddAll.hidden = false; shotAddAll.style.display = ""; }
+    } else {
+      shotDetected.innerHTML = "";
+      shotOcrStatus.textContent = "照片中没有识别出可匹配的食材文字——请手动勾选下面的常见食材，或切到「文字输入」添加。";
+      shotOcrStatus.style.color = "";
+      if (shotAddAll) shotAddAll.hidden = true;
+    }
+    if (shotRaw) {
+      var t = String(rawText || "").trim();
+      shotRaw.textContent = t ? "原文：\u201C" + t + "\u201D" : "";
+    }
+  }
+
+  function shotAddPicked() {
+    var names = [];
+    if (shotDetected) {
+      shotDetected.querySelectorAll("input:checked").forEach(function (el) {
+        if (el.value) names.push(el.value);
+      });
+    }
+    if (names.length) {
+      addPantryItems(names, "photo");
+      shotDetected.innerHTML = "";
+      if (shotAddAll) shotAddAll.hidden = true;
+      shotOcrStatus.textContent = "已将识别出的 " + names.length + " 种食材加入清单，可继续处理其他照片。";
+      toast("已加入 " + names.length + " 种食材");
+    } else {
+      toast("请先勾选要加入的食材", "warn");
+    }
+  }
+
+  if (shotAddAll) shotAddAll.addEventListener("click", shotAddPicked);
+
+  function runShotOcr(imgEl) {
+    if (!shotResult) return;
+    shotResult.hidden = false;
+    shotOcrStatus.textContent = "正在加载识别引擎（首次约 3~10 秒）……";
+    loadOcrEngine().then(function (ok) {
+      if (!ok) {
+        shotOcrStatus.textContent = "识别引擎加载失败（可能未联网）——已切换为手动勾选模式。";
+        shotOcrStatus.style.color = "";
+        renderShotPick();
+        return;
+      }
+      // 压缩大图，加速识别
+      var cv = document.createElement("canvas");
+      var maxSide = 1600;
+      var w = imgEl.naturalWidth || imgEl.width, h = imgEl.naturalHeight || imgEl.height;
+      if (w > maxSide || h > maxSide) {
+        var scale = maxSide / Math.max(w, h);
+        w = Math.round(w * scale); h = Math.round(h * scale);
+      }
+      cv.width = w; cv.height = h;
+      cv.getContext("2d").drawImage(imgEl, 0, 0, w, h);
+      getOcrWorker().then(function (worker) {
+        return worker.recognize(cv).then(function (ret) {
+          worker.terminate(); _workerCache = null; // 复用会积累内存，识别完即释放
+          var hits = matchOcrText(ret.data.text);
+          renderDetected(hits, ret.data.text);
+        });
+      }).catch(function (e) {
+        _workerCache = null;
+        shotOcrStatus.textContent = "识别出错（" + (e && e.message || e) + "）——请手动勾选补充。";
+        shotOcrStatus.style.color = "";
+        renderShotPick();
+      });
+    });
+  }
+
+  if (photoInput) {
+    photoInput.addEventListener("change", function () {
+      var file = photoInput.files && photoInput.files[0];
+      if (!file) return;
+      shotPreview.hidden = false;
+      shotResult.hidden = false;
+      shotPreview.innerHTML = "";
+      shotDetected.innerHTML = "";
+      if (shotRaw) shotRaw.textContent = "";
+      var img = document.createElement("img");
+      img.alt = "已选择的食材照片（浏览器本地 OCR 识别）";
+      img.src = URL.createObjectURL(file);
+      shotPreview.appendChild(img);
+      renderShotPick();
+      if (img.complete) runShotOcr(img);
+      else img.onload = function () { runShotOcr(img); };
+    });
+  }
+
+  if (voiceBtn) voiceBtn.addEventListener("click", startVoice);
+
+  renderSuggest();
+
+  /* 事件绑定：食材录入 */
+  document.addEventListener("click", function (ev) {
+    var tabBtn = ev.target.closest("[data-tab]");
+    if (tabBtn) {
+      document.querySelectorAll(".entry-tab").forEach(function (t) {
+        var on = t === tabBtn;
+        t.classList.toggle("on", on);
+        t.setAttribute("aria-selected", String(on));
+      });
+      document.querySelectorAll(".entry-body").forEach(function (b) {
+        b.classList.toggle("on", b.id === "tab-" + tabBtn.getAttribute("data-tab"));
+      });
+      return;
+    }
+    var addTextBtn = ev.target.closest("[data-action='add-ing-text']");
+    if (addTextBtn) {
+      var names = parseIngText(ingText.value);
+      if (names.length) {
+        addPantryItems(names, "text");
+        ingText.value = "";
+      } else {
+        toast("请输入至少一个食材名", "warn");
+      }
+      return;
+    }
+    var suggestBtn = ev.target.closest("[data-action='add-ing-suggest']");
+    if (suggestBtn) {
+      addPantryItems([suggestBtn.getAttribute("data-name")], "suggest");
+      return;
+    }
+    var delBtn = ev.target.closest("[data-action='del-ing']");
+    if (delBtn) {
+      var id = delBtn.getAttribute("data-id");
+      pantry.set({ items: pantryItems().filter(function (it) { return it.id !== id; }), dirty: true });
+      renderPantry();
+      return;
+    }
+    var saveBtn = ev.target.closest("[data-action='save-pantry']");
+    if (saveBtn) {
+      var n = pantryItems().length;
+      if (!n) { toast("清单为空，请先录入食材", "warn"); return; }
+      toast("已保存 " + n + " 种食材，可进入「生成方案」");
+      pantry.set({ dirty: false });
+    }
+  });
+
+  if (ingText) {
+    ingText.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        var names = parseIngText(ingText.value);
+        if (names.length) {
+          addPantryItems(names, "text");
+          ingText.value = "";
+        }
+      }
+    });
+  }
+
+  window.__PANTRY_READY__ = true;
+
+  /* ================= 方案生成引擎（Step 3） ================= */
+
+  /* 食材营养库：每 100g 的近似营养值（参照中国食物成分表常见值，用于演示估算，非医学建议） */
+  var FOOD_DB = {
+    "鸡胸肉": { protein: 24, fat: 5, carb: 0.6, kcal: 133, vA: 16, ca: 8, fe: 0.7, na: 39, fiber: 0 },
+    "排骨": { protein: 17, fat: 12, carb: 0.5, kcal: 180, vA: 10, ca: 25, fe: 1.2, na: 55, fiber: 0 },
+    "豆腐": { protein: 8, fat: 4, carb: 2, kcal: 82, vA: 0, ca: 138, fe: 1.9, na: 7, fiber: 0.4 },
+    "西兰花": { protein: 4.1, fat: 0.6, carb: 4.3, kcal: 36, vA: 120, ca: 67, fe: 1.2, na: 33, fiber: 1.6 },
+    "冬瓜": { protein: 0.4, fat: 0.2, carb: 2.6, kcal: 11, vA: 13, ca: 19, fe: 0.2, na: 1.8, fiber: 0.8 },
+    "菠菜": { protein: 2.6, fat: 0.3, carb: 4.5, kcal: 28, vA: 487, ca: 66, fe: 2.9, na: 85, fiber: 1.7 },
+    "鸡蛋": { protein: 13, fat: 9, carb: 1.5, kcal: 144, vA: 234, ca: 56, fe: 2, na: 131, fiber: 0 },
+    "鸡腿肉": { protein: 20, fat: 8, carb: 0.6, kcal: 155, vA: 44, ca: 8, fe: 1, na: 60, fiber: 0 },
+    "里脊": { protein: 20.2, fat: 7.9, carb: 0.7, kcal: 155, vA: 5, ca: 6, fe: 1.5, na: 51, fiber: 0 },
+    "虾": { protein: 18.6, fat: 0.8, carb: 2.8, kcal: 93, vA: 15, ca: 62, fe: 1.5, na: 165, fiber: 0 },
+    "鲈鱼": { protein: 18.6, fat: 3.4, carb: 0, kcal: 105, vA: 19, ca: 138, fe: 2, na: 144, fiber: 0 },
+    "牛奶": { protein: 3, fat: 3.2, carb: 3.4, kcal: 54, vA: 24, ca: 104, fe: 0.3, na: 37, fiber: 0 },
+    "酸奶": { protein: 2.5, fat: 2.7, carb: 9.3, kcal: 72, vA: 26, ca: 118, fe: 0.4, na: 39, fiber: 0 },
+    "鸡蛋": { protein: 13, fat: 9, carb: 1.5, kcal: 144, vA: 234, ca: 56, fe: 2, na: 131, fiber: 0 },
+    "土豆": { protein: 2, fat: 0.2, carb: 17.2, kcal: 77, vA: 5, ca: 8, fe: 0.8, na: 2.7, fiber: 1.1 },
+    "胡萝卜": { protein: 1, fat: 0.2, carb: 9.6, kcal: 39, vA: 688, ca: 32, fe: 1, na: 71, fiber: 1.1 },
+    "西红柿": { protein: 0.9, fat: 0.2, carb: 3.5, kcal: 18, vA: 92, ca: 10, fe: 0.4, na: 5, fiber: 0.5 },
+    "黄瓜": { protein: 0.8, fat: 0.2, carb: 2.9, kcal: 15, vA: 15, ca: 24, fe: 0.5, na: 4.9, fiber: 0.5 },
+    "大白菜": { protein: 1.5, fat: 0.1, carb: 3.2, kcal: 18, vA: 20, ca: 50, fe: 0.7, na: 57, fiber: 0.8 },
+    "青菜": { protein: 1.6, fat: 0.3, carb: 3.2, kcal: 20, vA: 260, ca: 90, fe: 2.1, na: 73, fiber: 1.2 },
+    "油麦菜": { protein: 1.4, fat: 0.4, carb: 2.1, kcal: 15, vA: 360, ca: 70, fe: 1.2, na: 80, fiber: 0.9 },
+    "香菇": { protein: 2.2, fat: 0.3, carb: 5.2, kcal: 26, vA: 0, ca: 2, fe: 0.9, na: 1.4, fiber: 3.3 },
+    "金针菇": { protein: 2.4, fat: 0.4, carb: 3.3, kcal: 26, vA: 5, ca: 0, fe: 1.4, na: 4.3, fiber: 2.7 },
+    "紫菜": { protein: 26.7, fat: 1.1, carb: 44.1, kcal: 250, vA: 228, ca: 264, fe: 54.9, na: 710, fiber: 21.6 },
+    "海带": { protein: 1.2, fat: 0.1, carb: 2.1, kcal: 13, vA: 0, ca: 46, fe: 0.9, na: 8.6, fiber: 0.5 },
+    "黑木耳": { protein: 9.4, fat: 1.3, carb: 36, kcal: 174, vA: 7, ca: 247, fe: 97.4, na: 48.5, fiber: 6 },
+    "南瓜": { protein: 0.7, fat: 0.1, carb: 5.3, kcal: 23, vA: 148, ca: 16, fe: 0.4, na: 0.8, fiber: 0.8 },
+    "山药": { protein: 1.9, fat: 0.2, carb: 11.6, kcal: 57, vA: 3, ca: 16, fe: 0.3, na: 18.6, fiber: 0.8 },
+    "红薯": { protein: 1.1, fat: 0.2, carb: 24.7, kcal: 106, vA: 125, ca: 23, fe: 0.5, na: 55, fiber: 1.6 },
+    "玉米": { protein: 4, fat: 1.2, carb: 22.8, kcal: 112, vA: 17, ca: 22, fe: 1.6, na: 3.1, fiber: 2.9 },
+    "苹果": { protein: 0.2, fat: 0.2, carb: 13.5, kcal: 52, vA: 10, ca: 4, fe: 0.6, na: 1, fiber: 1.2 },
+    "香蕉": { protein: 1.4, fat: 0.2, carb: 22, kcal: 93, vA: 10, ca: 7, fe: 0.4, na: 1, fiber: 1.2 },
+    "橙子": { protein: 0.8, fat: 0.2, carb: 11.1, kcal: 48, vA: 27, ca: 20, fe: 0.4, na: 1, fiber: 0.6 },
+    "大米": { protein: 7.4, fat: 0.8, carb: 77.2, kcal: 346, vA: 0, ca: 13, fe: 1.2, na: 3, fiber: 0.7 },
+    "糙米": { protein: 7.7, fat: 2.2, carb: 75, kcal: 348, vA: 0, ca: 10, fe: 1.3, na: 3, fiber: 3.4 },
+    "小米": { protein: 9, fat: 3.1, carb: 75.1, kcal: 361, vA: 17, ca: 41, fe: 5.1, na: 4.3, fiber: 1.6 },
+    "黑米": { protein: 9.4, fat: 2.5, carb: 72.2, kcal: 341, vA: 12, ca: 12, fe: 1.6, na: 7, fiber: 3.9 },
+    "燕麦": { protein: 15, fat: 6.7, carb: 61.6, kcal: 389, vA: 0, ca: 186, fe: 7, na: 3.7, fiber: 5.3 },
+    "红豆": { protein: 20.2, fat: 0.6, carb: 63.4, kcal: 329, vA: 13, ca: 74, fe: 7.4, na: 2.2, fiber: 7.7 },
+    "绿豆": { protein: 21.6, fat: 0.8, carb: 62, kcal: 329, vA: 22, ca: 81, fe: 6.5, na: 3.2, fiber: 6.4 },
+    "黄豆": { protein: 35, fat: 16, carb: 34.2, kcal: 390, vA: 37, ca: 191, fe: 8.2, na: 2.2, fiber: 15.5 },
+    "猪肉": { protein: 13.2, fat: 37, carb: 2.4, kcal: 395, vA: 18, ca: 6, fe: 1.6, na: 59, fiber: 0 },
+    "牛肉": { protein: 19.9, fat: 4.2, carb: 2, kcal: 125, vA: 7, ca: 23, fe: 3.3, na: 84, fiber: 0 },
+    "羊肉": { protein: 19, fat: 14.1, carb: 0, kcal: 203, vA: 22, ca: 6, fe: 2.3, na: 80, fiber: 0 },
+    "面条": { protein: 8.3, fat: 0.7, carb: 61.9, kcal: 284, vA: 0, ca: 12, fe: 1, na: 185, fiber: 0.8 },
+    "葱": { protein: 1.7, fat: 0.3, carb: 6.5, kcal: 33, vA: 140, ca: 29, fe: 0.7, na: 4.8, fiber: 1.3 },
+    "姜": { protein: 1.3, fat: 0.6, carb: 10.3, kcal: 46, vA: 0, ca: 27, fe: 1.4, na: 14.9, fiber: 2.7 },
+    "蒜": { protein: 4.5, fat: 0.2, carb: 27.6, kcal: 128, vA: 0, ca: 39, fe: 1.2, na: 19.6, fiber: 1.1 },
+    "洋葱": { protein: 1.1, fat: 0.2, carb: 9, kcal: 40, vA: 3, ca: 24, fe: 0.6, na: 4.4, fiber: 0.9 },
+    "辣椒": { protein: 1.9, fat: 0.3, carb: 8.9, kcal: 37, vA: 340, ca: 15, fe: 1.1, na: 2.6, fiber: 2.6 },
+    "花生": { protein: 25, fat: 44, carb: 17, kcal: 563, vA: 2, ca: 39, fe: 2.1, na: 4, fiber: 5.5 },
+    "核桃": { protein: 14.9, fat: 58.8, carb: 19.1, kcal: 646, vA: 5, ca: 56, fe: 2.7, na: 6, fiber: 9.5 },
+    "红枣": { protein: 3.2, fat: 0.5, carb: 67.8, kcal: 276, vA: 7, ca: 64, fe: 2.3, na: 6.2, fiber: 6.2 },
+    "枸杞": { protein: 13.9, fat: 1.5, carb: 64.1, kcal: 258, vA: 1625, ca: 60, fe: 5.4, na: 252, fiber: 16.9 },
+    "栗子": { protein: 4.2, fat: 0.7, carb: 42.2, kcal: 189, vA: 32, ca: 17, fe: 1.1, na: 13.9, fiber: 1.7 }
+  };
+
+  /* 通用菜品模板：食材组合 -> 菜品（所有配方食材均来自现有食材） */
+  var DISH_TEMPLATES = [
+    { id: "chicken-ginger", name: "姜丝炒鸡胸肉", method: "炒", tags: "高蛋白 · 低脂", desc: "鸡胸肉切片姜丝提味，大火快炒锁住水分，是增肌与控脂成员的优选主菜。",
+      ings: [["鸡胸肉", 120], ["姜", 5]], key: ["鸡胸肉"] },
+    { id: "rib-soup", name: "去油排骨冬瓜汤", method: "炖", tags: "清润 · 低油汤品", desc: "排骨焯水去浮油、配冬瓜同炖，表层撇油，汤鲜不腻，适合全家尤其老人儿童。",
+      ings: [["排骨", 100], ["冬瓜", 150], ["姜", 3]], key: ["排骨", "冬瓜"] },
+    { id: "broccoli-veg", name: "清炒西兰花", method: "炒", tags: "维生素 · 膳食纤维", desc: "西兰花汆水后快炒，口感脆嫩，维生素A与膳食纤维双高。",
+      ings: [["西兰花", 150]], key: ["西兰花"] },
+    { id: "spinach-veg", name: "清炒菠菜", method: "炒", tags: "补铁 · 维生素A", desc: "菠菜焯水去草酸后清炒，保留膳食铁与维生素A，是孕期补铁好帮手。",
+      ings: [["菠菜", 150]], key: ["菠菜"] },
+    { id: "tofu-soft", name: "嫩豆腐", method: "蒸", tags: "优质蛋白 · 易消化", desc: "嫩豆腐统一蒸制，可按需调味或打泥，一菜两吃，老少皆宜。",
+      ings: [["豆腐", 180]], key: ["豆腐"] },
+    { id: "meat-veg-stir", name: "时蔬炒肉", method: "炒", tags: "荤素搭配", desc: "现有肉类与时蔬搭配快炒，一菜满足蛋白与维生素。",
+      ings: [], key: ["MEAT", "VEG"], dynamic: true },
+    { id: "egg-tomato", name: "西红柿炒蛋", method: "炒", tags: "家常 · 高利用率", desc: "家常经典搭配，蛋香浓郁、番茄酸甜，营养互补。",
+      ings: [["鸡蛋", 100], ["西红柿", 150]], key: ["鸡蛋", "西红柿"] },
+    { id: "steamed-egg", name: "水蒸蛋", method: "蒸", tags: "软嫩 · 宝宝友好", desc: "鸡蛋打散加水蒸制，口感细嫩，适合宝宝与需要软食的成员。",
+      ings: [["鸡蛋", 80]], key: ["鸡蛋"] },
+    { id: "pumpkin-congee", name: "南瓜小米粥", method: "粥", tags: "温养 · 易消化", desc: "南瓜与小米慢熬成粥，甜糯温养，健脾易消化。",
+      ings: [["南瓜", 100], ["小米", 40]], key: ["南瓜", "小米"] },
+    { id: "potato-stir", name: "醋溜土豆丝", method: "炒", tags: "开胃 · 家常", desc: "土豆切丝快炒，酸爽开胃，老少接受度高。",
+      ings: [["土豆", 180]], key: ["土豆"] },
+    { id: "carrot-egg", name: "胡萝卜炒蛋", method: "炒", tags: "维生素A · 护眼", desc: "胡萝卜富含维生素A，与鸡蛋同炒，营养吸收更佳。",
+      ings: [["胡萝卜", 120], ["鸡蛋", 80]], key: ["胡萝卜", "鸡蛋"] },
+    { id: "mushroom-chicken", name: "香菇滑鸡", method: "焖", tags: "鲜香 · 高蛋白", desc: "香菇与鸡肉同焖，菌菇多糖配优质蛋白，鲜香下饭。",
+      ings: [["香菇", 80], ["鸡胸肉", 120]], key: ["香菇", "鸡胸肉"] },
+    { id: "fish-tofu", name: "鱼头豆腐汤", method: "炖", tags: "补钙 · 鲜甜", desc: "鱼肉与豆腐同炖，钙与优质蛋白双补充，汤色奶白。",
+      ings: [["鲈鱼", 120], ["豆腐", 120]], key: ["鲈鱼", "豆腐"] },
+    { id: "seaweed-egg", name: "紫菜蛋花汤", method: "汤", tags: "补碘 · 快手", desc: "紫菜与蛋花煮汤，补碘补铁，三分钟上桌。",
+      ings: [["紫菜", 6], ["鸡蛋", 50]], key: ["紫菜", "鸡蛋"] },
+    { id: "yam-pork", name: "山药炒肉片", method: "炒", tags: "健脾 · 温和", desc: "山药健脾，配瘦肉片快炒，温润不燥。",
+      ings: [["山药", 120], ["里脊", 80]], key: ["山药", "里脊"] },
+    { id: "cucumber-egg", name: "黄瓜炒蛋", method: "炒", tags: "清爽 · 低脂", desc: "黄瓜清口配蛋香，清爽低脂，四季皆宜。",
+      ings: [["黄瓜", 120], ["鸡蛋", 80]], key: ["黄瓜", "鸡蛋"] },
+    { id: "cabbage-veg", name: "手撕包菜", method: "炒", tags: "脆爽 · 家常", desc: "包菜手撕旺火爆炒，脆爽入味，成本低利用率高。",
+      ings: [["大白菜", 160]], key: ["大白菜"] },
+    { id: "sweet-potato", name: "蒸红薯", method: "蒸", tags: "粗粮 · 膳食纤维", desc: "红薯蒸制保留营养，替代部分精制主食，控糖友好。",
+      ings: [["红薯", 150]], key: ["红薯"] },
+    { id: "corn-rice", name: "玉米段（蒸）", method: "蒸", tags: "粗粮 · 谷物", desc: "玉米切段蒸熟，作为粗粮搭配主食，增加膳食纤维。",
+      ings: [["玉米", 120]], key: ["玉米"] },
+    { id: "beef-onion", name: "洋葱炒牛肉", method: "炒", tags: "补铁 · 高蛋白", desc: "牛肉补铁补蛋白，洋葱提香解腻，强体增肌优选。",
+      ings: [["牛肉", 120], ["洋葱", 80]], key: ["牛肉", "洋葱"] }
+  ];
+
+  /* 主食分档：同一锅米出品，按成员分档 */
+  function stapleTiers(hasRice, hasCoarse) {
+    var tiers = [{ name: "糙米饭", who: "健身/控糖成员", desc: "糙米为主，保留米糠层，膳食纤维更足" }];
+    if (hasCoarse) tiers.push({ name: "杂粮饭", who: "孕妈/一般成人", desc: "糙米、小米、杂豆混蒸，营养更均衡" });
+    tiers.push({ name: "软米饭", who: "老人/肠胃弱者", desc: "精米多加水煮软，易嚼易消化" });
+    tiers.push({ name: "宝宝米汤", who: "婴幼儿辅食", desc: "米汤上层清液，质地稀滑，适6月龄以上" });
+    return tiers;
+  }
+
+  /* 每人每日营养参考值（RDA 简化模型，用于演示估算；实际应遵医嘱） */
+  function memberRDA(m) {
+    var base = { protein: 60, carb: 250, fat: 60, kcal: 2000, vA: 800, ca: 800, fe: 12, na: 2000, fiber: 25 };
+    if (m.role === "pregnant") { base.protein = 85; base.ca = 1000; base.fe = 24; base.kcal = 2100; base.carb = 280; }
+    if (m.role === "baby") { base.protein = 18; base.ca = 400; base.fe = 10; base.vA = 350; base.carb = 100; base.fat = 30; base.kcal = 700; base.na = 400; base.fiber = 8; }
+    if (m.role === "child") { base.protein = 35; base.ca = 800; base.fe = 12; base.vA = 500; base.kcal = 1400; base.carb = 180; base.fat = 45; base.fiber = 15; }
+    if (m.role === "teen") { base.protein = 75; base.ca = 1000; base.fe = 18; base.vA = 700; base.kcal = 2300; base.carb = 300; base.fat = 70; base.fiber = 22; }
+    if (m.role === "elders") { base.protein = 65; base.ca = 1000; base.fe = 12; base.vA = 750; base.kcal = 1750; base.carb = 220; base.fat = 55; base.fiber = 22; }
+    return base;
+  }
+
+  /* 营养素中文名与口径 */
+  var NUTRI_LABEL = {
+    protein: "蛋白质", carb: "碳水化合物", fat: "脂肪", kcal: "能量", vA: "维生素A", ca: "钙", fe: "铁", na: "钠", fiber: "膳食纤维"
+  };
+  var NUTRI_UNIT = { protein: "g", carb: "g", fat: "g", kcal: "kcal", vA: "μgRE", ca: "mg", fe: "mg", na: "mg", fiber: "g" };
+
+  /* 成员规则 -> 分餐偏好（份量系数与备注） */
+  function memberPortionPrefs(m) {
+    var prefs = { big: [], small: [], notes: [] };
+    var rules = matchRules(m);
+    rules.forEach(function (r) {
+      if (r.id === "muscle") { prefs.big.push("鸡胸肉"); prefs.notes.push("加大份高蛋白主菜"); }
+      if (r.id === "pregnant") { prefs.notes.push("足量绿叶菜与优质蛋白"); }
+      if (r.id === "low-salt") { prefs.small.push("盐"); prefs.notes.push("少油少盐、清淡烹调"); }
+      if (r.id === "qi" || r.id === "stomach") { prefs.notes.push("温软易消化、避免生冷"); }
+      if (r.id === "baby") { prefs.notes.push("单独打泥、质地稀滑"); }
+      if (r.id === "iron") { prefs.notes.push("优先补铁食材"); }
+      if (r.id === "calcium") { prefs.notes.push("优先高钙食材"); }
+      if (r.id === "warm") { prefs.notes.push("温补调和"); }
+    });
+    if (m.role === "baby") { prefs.big.push("豆腐"); prefs.big.push("西兰花"); prefs.notes.push("辅食形态：泥状或米汤"); }
+    if (m.role === "elders") { prefs.big.push("豆腐"); prefs.big.push("冬瓜"); }
+    return prefs;
+  }
+
+  /* 生成缺口的建议补位食材（分级：优先补缺口最大者） */
+  var GAP_FOOD = {
+    protein: ["鸡蛋", "豆腐", "鸡胸肉", "牛肉", "虾"],
+    carb: ["大米", "糙米", "红薯", "玉米"],
+    vA: ["菠菜", "胡萝卜", "南瓜", "枸杞"],
+    ca: ["牛奶", "豆腐", "黑木耳", "海带"],
+    fe: ["菠菜", "黑木耳", "牛肉", "红枣"],
+    fiber: ["糙米", "西兰花", "燕麦", "红薯"],
+    fat: ["核桃", "花生", "橄榄油"],
+    kcal: ["大米", "花生", "核桃"]
+  };
+
+  /* 分级补充建议 + 智能采购清单生成：
+     触发条件：核心营养素缺口超30%，或主菜不足2道（按需触发）。
+     输出按缺口幅度排序，优先匹配缺口最大的成员，标注补充营养素与建议采购量。 */
+  var AMOUNT_BASE = { protein: 150, carb: 300, fat: 80, vA: 150, ca: 300, fe: 60, fiber: 150, kcal: 300 };
+
+  function estimateAmount(nutri, gapPct, memberCount) {
+    var base = AMOUNT_BASE[nutri] || 150;
+    if (nutri === "na") return "—";
+    var factor = Math.max(1, Math.min(1.5, gapPct / 40));
+    var amt = Math.round(base * memberCount * factor / 10) * 10;
+    return "约" + amt + (nutri === "ca" ? "ml" : "g");
+  }
+
+  function buildPurchaseList(plan, ingredientNames) {
+    var memberCount = (plan.members || []).length || 1;
+    var ings = ingredientNames || [];
+    var hasIng = function (food) {
+      return ings.some(function (n) { return n === food || (n && n.indexOf(food) > -1) || (food && food.indexOf(n) > -1); });
+    };
+    var seen = {};
+    var counted = {};
+    var chosenFoods = {};
+    var anyGap30 = false;
+    var totalGap40 = false;
+    (plan.members || []).forEach(function (mp) {
+      var own = mp.target || (mp.member && mp.member.name) || "成员";
+      var gaps = mp.gaps && mp.gaps.length ? mp.gaps : (mp.gapsText || []);
+      gaps.forEach(function (g) {
+        if (g.gapPct > 30) anyGap30 = true;
+        if (g.gapPct > 40) totalGap40 = true;
+        if (g.gapPct < 25) return;
+        (GAP_FOOD[g.nutri] || []).forEach(function (food) {
+          if (hasIng(food)) return; // 已有食材无需再采购
+          if (chosenFoods[food]) return; // 同食材不重复推荐
+          var key = g.nutri + "|" + food;
+          if (seen[key]) {
+            if (g.gapPct > seen[key].gapPct) { seen[key].who = own; seen[key].gapPct = g.gapPct; }
+            return;
+          }
+          if (counted[g.nutri] >= 2) return; // 每个营养素最多推荐2项（首选+备选）
+          counted[g.nutri] = (counted[g.nutri] || 0) + 1;
+          chosenFoods[food] = true;
+          seen[key] = { nutri: g.nutri, nutriLabel: g.label, food: food, gapPct: g.gapPct, who: own, amount: estimateAmount(g.nutri, g.gapPct, memberCount) };
+        });
+      });
+    });
+    var items = Object.keys(seen).map(function (k) { return seen[k]; });
+    items.sort(function (a, b) { return b.gapPct - a.gapPct; });
+    items.forEach(function (it, i) {
+      it.rank = i + 1;
+      it.level = it.gapPct > 40 ? "high" : (it.gapPct >= 30 ? "mid" : "low");
+      it.levelText = it.gapPct > 40 ? "紧急补充" : (it.gapPct >= 30 ? "建议补充" : "可选补充");
+    });
+    var mainShort = (plan.mainCount || 0) < 2;
+    var triggered = mainShort || anyGap30;
+    return {
+      triggered: triggered,
+      mainShort: mainShort,
+      anyGap30: anyGap30,
+      totalGap40: totalGap40,
+      items: items.slice(0, 10),
+      memberCount: memberCount
+    };
+  }
+
+  /* 采购清单导出：生成 BOM CSV 并触发本地下载（表格文件） */
+  function exportPurchaseCsv(plan) {
+    var p = plan.purchase || { items: [] };
+    var header = ["优先级", "建议采购食材", "补充营养素", "建议采购量", "优先补齐成员", "缺口比例"];
+    var rows = p.items.map(function (it) {
+      return [it.rank + "·" + it.levelText, it.food, it.nutriLabel || "", it.amount, it.who, it.gapPct + "%"];
+    });
+    var csv = "\uFEFF" + [header].concat(rows).map(function (r) {
+      return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(",");
+    }).join("\r\n");
+    window.__LAST_CSV__ = csv; // 供自动化验证
+
+    var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var d = new Date();
+    var stamp = d.getFullYear() + ("0" + (d.getMonth() + 1)).slice(-2) + ("0" + d.getDate()).slice(-2) + "-" + ("0" + d.getHours()).slice(-2) + ("0" + d.getMinutes()).slice(-2);
+    a.href = url;
+    a.download = "智能采购清单-" + stamp + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    toast("采购清单已导出为本地表格文件");
+  }
+
+  function dishNutrition(dish) {
+    /* 菜品营养 = 配料营养合计（按克数折算每100g值） */
+    var n = { protein: 0, fat: 0, carb: 0, kcal: 0, vA: 0, ca: 0, fe: 0, na: 0, fiber: 0 };
+    (dish.ings || []).forEach(function (pair) {
+      var d = FOOD_DB[pair[0]]; if (!d) return;
+      var g = pair[1];
+      Object.keys(n).forEach(function (k) {
+        if (d[k] !== undefined) n[k] += d[k] * g / 100;
+      });
+    });
+    return n;
+  }
+
+  /* 分餐分配：给每位成员一份"这个菜吃多少比例"的方案 */
+  function allocateMember(m, dishes) {
+    var prefs = memberPortionPrefs(m);
+    var rda = memberRDA(m);
+    var intake = { protein: 0, fat: 0, carb: 0, kcal: 0, vA: 0, ca: 0, fe: 0, na: 0, fiber: 0 };
+    var portions = [];
+    var dishesById = {};
+    (dishes || []).forEach(function (d) { dishesById[d.id] = d; });
+
+    (Object.keys(dishesById)).forEach(function (id) {
+      var d = dishesById[id];
+      var ratio = 0.25;
+
+      // 按成员角色与规则微调比例
+      var nameJoined = d.name;
+      var isMeat = /鸡胸肉|牛肉|排骨|里脊|肉|鱼|虾|蛋|豆腐/.test(nameJoined);
+      var isVeg = /西兰花|菠菜|蔬菜|土豆|胡萝卜|黄瓜|青菜|包菜/.test(nameJoined);
+      var isSoup = /汤|粥/.test(nameJoined);
+      var isStaple = /饭|米|红薯|玉米/.test(nameJoined);
+
+      if (m.role === "baby") {
+        // 宝宝只取适配项：主食分档 / 豆腐 / 西兰花 / 汤粥 / 软烂蔬菜
+        var babyOk = /主食|豆腐|西兰花|冬瓜|米汤|汤|泥|南瓜|胡萝卜/.test(d.name) && !/姜|葱|蒜/.test(d.name);
+        if (!babyOk) return; // 不适配的菜品直接跳过
+        if (isSoup || /米汤/.test(d.name)) ratio = 0.5;
+        else if (/豆腐/.test(d.name)) ratio = 0.35;
+        else if (isVeg) ratio = 0.3;
+        else if (isStaple || isMeat) ratio = 0.15;
+        else ratio = 0.2;
+      } else if (m.role === "elders") {
+        if (isSoup) ratio = 0.35;
+        else if (/豆腐/.test(d.name)) ratio = 0.3;
+        else if (isVeg) ratio = 0.25;
+        else if (isStaple) ratio = 0.3;
+        else ratio = 0.2;
+        if (prefs.small.indexOf("盐") > -1) ratio = Math.min(ratio, 0.25);
+      } else {
+        if (isMeat && prefs.big.length) ratio = 0.45;
+        else if (isMeat) ratio = 0.3;
+        else if (isVeg) ratio = 0.3;
+        else if (isSoup) ratio = 0.25;
+        else if (isStaple) ratio = 0.3;
+        else ratio = 0.25;
+      }
+
+      if (/主食/.test(d.id) || /staple/.test(d.id)) ratio = 0.3;
+
+      var dn = dishNutrition(d);
+      Object.keys(intake).forEach(function (k) { intake[k] += dn[k] * ratio; });
+
+      var whoNote = "";
+      if (m.role === "baby" && !/米汤|泥/.test(d.name)) whoNote = "（打泥后食用）";
+      if (m.role === "elders" && prefs.small.indexOf("盐") > -1) whoNote = "（少油少盐）";
+
+      portions.push({ dishId: d.id, dishName: d.name, ratio: ratio, note: whoNote });
+    });
+
+    /* 剩余缺口计算（与RDA对比） */
+    var gaps = [];
+    Object.keys(rda).forEach(function (k) {
+      var pct = rda[k] > 0 ? intake[k] / rda[k] : 1;
+      var lack = rda[k] - intake[k];
+      if (lack > rda[k] * 0.1) {
+        gaps.push({
+          nutri: k, label: NUTRI_LABEL[k], unit: NUTRI_UNIT[k],
+          intake: Math.round(intake[k]), rda: rda[k],
+          pct: Math.round(pct * 100),
+          gapPct: Math.round(lack / rda[k] * 100),
+          gapAmount: lack > 100 ? Math.round(lack) : Math.round(lack * 10) / 10
+        });
+      }
+    });
+    gaps.sort(function (a, b) { return b.gapPct - a.gapPct; });
+    gaps = gaps.slice(0, 3);
+
+    /* 摄入优点：依据规则与营养亮点 */
+    var plus = [];
+    var ruleIds = matchRules(m).map(function (r) { return r.id; });
+    if (ruleIds.indexOf("muscle") > -1 && intake.protein / rda.protein > 0.7) plus.push("蛋白质配比满足增肌目标，配合足量膳食纤维与碳水，能量供给均衡");
+    if (ruleIds.indexOf("pregnant") > -1) plus.push("优质蛋白与膳食铁摄入充足，油脂摄入控制合理，符合孕期营养基础要求");
+    if (ruleIds.indexOf("low-salt") > -1 && intake.na / rda.na <= 1) plus.push("钠摄入控制在推荐范围内，清淡烹调适配慢病管理需求");
+    if (ruleIds.indexOf("baby") > -1) plus.push("优质蛋白与维生素配比适龄，形态符合辅食添加要求（泥状/米汤）");
+    if (ruleIds.indexOf("qi") > -1 || ruleIds.indexOf("stomach") > -1) plus.push("食材温软易消化，烹调方式温和，适配体虚与肠胃特点");
+    if (ruleIds.indexOf("iron") > -1 || (intake.fe / rda.fe > 1 && intake.fe > 8)) plus.push("铁元素摄入充足，来自动物性与植物性食材的搭配更易吸收");
+    if (ruleIds.indexOf("calcium") > -1 || (intake.ca / rda.ca > 0.9 && intake.ca > 500)) plus.push("钙摄入接近达标，豆腐/奶类等高钙食材发挥了作用");
+    if (ruleIds.indexOf("warm") > -1) plus.push("姜丝等温性配料中和了食材寒性，适配体质特点");
+    if (intake.fiber / rda.fiber > 0.7) plus.push("膳食纤维摄入充足，来自西兰花、糙米等食材，助力肠道健康");
+    if (!plus.length) {
+      var topK = Object.keys(intake).filter(function (k) { return rda[k] > 0; }).sort(function (a, b) { return intake[b] / rda[b] - intake[a] / rda[a]; })[0];
+      if (topK) plus.push(NUTRI_LABEL[topK] + "摄入占参考量比例最高，是本餐较充足的营养素");
+    }
+    plus = plus.slice(0, 2);
+
+    return { member: m, rda: rda, intake: intake, gaps: gaps, plus: plus, portions: portions };
+  }
+
+  /* 通用方案生成 */
+  function buildGeneralPlan(members, ingredientNames) {
+    var ings = ingredientNames.slice();
+    var has = function (n) { return ings.some(function (i) { return i === n; }); };
+    var meatNames = ["鸡胸肉", "鸡腿肉", "排骨", "里脊", "猪肉", "牛肉", "羊肉", "虾", "鲈鱼", "鸡蛋"];
+    var vegNames = ["西兰花", "菠菜", "冬瓜", "土豆", "胡萝卜", "西红柿", "黄瓜", "大白菜", "青菜", "油麦菜", "香菇", "金针菇", "南瓜", "山药", "红薯", "玉米", "洋葱", "蒜"];
+    var hasMeat = ings.some(function (i) { return meatNames.indexOf(i) > -1; });
+    var hasVeg = ings.some(function (i) { return vegNames.indexOf(i) > -1; });
+
+    /* 模板匹配：依次尝试每个模板；动态模板（时蔬炒肉）复用剩余食材 */
+    var dishes = [];
+    var used = {};
+    DISH_TEMPLATES.forEach(function (tpl) {
+      var ok = true;
+      (tpl.key || []).forEach(function (k) {
+        if (k === "MEAT") { if (!hasMeat) ok = false; }
+        else if (k === "VEG") { if (!hasVeg) ok = false; }
+        else if (!has(k)) ok = false;
+      });
+      if (!ok) return;
+      var dish = {
+        id: tpl.id, name: tpl.name, method: tpl.method, desc: tpl.desc, tags: tpl.tags,
+        ings: tpl.ings.slice()
+      };
+      (tpl.key || []).forEach(function (k) {
+        if (k === "MEAT") {
+          var mf = ings.filter(function (i) { return meatNames.indexOf(i) > -1; })[0];
+          if (mf && !dish.ings.some(function (p) { return p[0] === mf; })) dish.ings.push([mf, 100]);
+        } else if (k === "VEG") {
+          var vf = ings.filter(function (i) { return vegNames.indexOf(i) > -1; })[0];
+          if (vf && !dish.ings.some(function (p) { return p[0] === vf; })) dish.ings.push([vf, 120]);
+        } else if (!dish.ings.some(function (p) { return p[0] === k; })) {
+          dish.ings.push([k, 100]);
+        }
+      });
+      dishes.push(dish);
+    });
+
+    /* 主食分档 */
+    var hasRice = has("大米") || has("糙米") || has("小米");
+    var hasCoarse = has("糙米") || has("小米") || has("黑米") || has("燕麦");
+    dishes.push({ id: "staple-tiers", name: "主食分档", method: "同锅米出品", tags: "分档供应", desc: "按成员需求分档：糙米饭、杂粮饭、软米饭、宝宝米汤", ings: [["大米", 200]], stapled: true, tiers: stapleTiers(hasRice, hasCoarse) });
+
+    /* 每人分配与评估 */
+    var memberPlans = (members || []).map(function (m) { return allocateMember(m, dishes); });
+
+    /* 供应协调：避免每人重复吃到同一主菜的冲突处理（简化：每人按比例同时取菜） */
+    var supplyCheck = {};
+    memberPlans.forEach(function (mp) {
+      mp.portions.forEach(function (p) {
+        supplyCheck[p.dishName] = (supplyCheck[p.dishName] || 0) + p.ratio;
+      });
+    });
+
+    return {
+      dishes: dishes,
+      members: memberPlans,
+      mainCount: dishes.filter(function (d) { return /炒|炖|焖|蒸/.test(d.method) && d.id !== "staple-tiers"; }).length,
+      supplyCheck: supplyCheck,
+      triggerPurchase: false
+    };
+  }
+
+  /* 主生成入口：一律走通用引擎，不再返回固定示例（示例仅在"了解产品"演示区展示，不参与正式生成） */
+  function buildPlan(members, ingredientNames) {
+    var plan = buildGeneralPlan(members, ingredientNames);
+    var purchase = buildPurchaseList(plan, ingredientNames);
+    plan.purchase = purchase;
+    plan.triggers = { anyGap30: purchase.anyGap30, mainShort: purchase.mainShort, totalGap40: purchase.totalGap40 };
+    return plan;
+  }
+
+  /* ---------- 方案 UI 渲染 ---------- */
+  function renderPlanCheck() {
+    var box = document.getElementById("plan-check");
+    if (!box) return;
+    var members = getFamilyMembers();
+    var ings = pantryItems().map(function (it) { return it.name; });
+    var checks = [
+      { ok: members.length > 0, label: "家庭档案 " + members.length + " 人" },
+      { ok: ings.length > 0, label: "现有食材 " + ings.length + " 种" }
+    ];
+    box.innerHTML = checks.map(function (c) {
+      return '<span class="plan-check-item' + (c.ok ? " ok" : "") + '"><span class="dot"></span>' + escapeHtml(c.label) + "</span>";
+    }).join("");
+    var btn = document.getElementById("plan-gen-btn");
+    if (btn) btn.disabled = !(members.length > 0 && ings.length > 0);
+  }
+
+  function renderPlanResult(plan, noScroll) {
+    var box = document.getElementById("plan-result");
+    var tiersBox = document.getElementById("plan-tiers");
+    box.classList.add("show");
+    if (!plan || !plan.dishes) { tiersBox.innerHTML = '<div class="plan-gate"><p>生成失败，请确认家庭档案与食材清单已填写。</p></div>'; return; }
+
+    var dishCards = plan.dishes.map(function (d) {
+      return '<div class="dish-card"><div class="d-name">' + escapeHtml(d.name) + "</div>" +
+        '<div class="d-desc">' + escapeHtml(d.desc) + "</div>" +
+        '<span class="d-method">' + escapeHtml(d.method) + "</span>" +
+        (d.tags ? '<div class="d-tags"><b>' + escapeHtml(d.tags) + "</b></div>" : "") + "</div>";
+    }).join("");
+
+    var memberCards = plan.members.map(function (mp) {
+      var m = mp.member || {};
+      var portionHtml = mp.portionText
+        ? "<p><b>分餐：</b>" + escapeHtml(mp.portionText) + "</p>"
+        : (mp.portions && mp.portions.length ? "<p><b>分餐：</b>" + mp.portions.map(function (p) {
+            return escapeHtml(p.dishName) + " " + Math.round(p.ratio * 100) + "%" + escapeHtml(p.note || "");
+          }).join(" · ") + "</p>" : "");
+      var plusHtml = "<div class='plus'><h4>摄入优点</h4><ul>" + (mp.plus || []).map(function (t) { return "<li>" + escapeHtml(t) + "</li>"; }).join("") + "</ul></div>";
+      var gapSource = (mp.gaps && mp.gaps.length) ? mp.gaps : (mp.gapsText || []);
+      var gapHtml = "<div class='gap'><h4>营养缺口</h4><ul>" + gapSource.map(function (g) {
+          if (g.note) return "<li>" + escapeHtml(g.note) + "</li>";
+          return "<li>" + escapeHtml(g.label) + "：摄入约" + g.pct + "%，缺口约" + g.gapPct + "%（参考量" + g.rda + g.unit + "）</li>";
+        }).join("") + "</ul></div>";
+      return '<div class="member-plan"><h4>' + escapeHtml(m.name || "成员") + "</h4>" + portionHtml + plusHtml + gapHtml + "</div>";
+    }).join("");
+
+    var tierHtml = "";
+    var staple = plan.dishes.filter(function (d) { return d.stapled; })[0];
+    if (staple && staple.tiers) {
+      tierHtml = "<div class='staple-tiers'><h4>主食分档</h4>" + staple.tiers.map(function (t) {
+        return "<div class='tier-item'><b>" + escapeHtml(t.name) + "</b> · " + escapeHtml(t.who) + "<span>" + escapeHtml(t.desc) + "</span></div>";
+      }).join("") + "</div>";
+    }
+
+    var noteHtml = "<p class='plan-note'>通用引擎生成：菜品全部来自现有食材，营养数值为估算参考值，不构成医疗建议。</p>";
+
+    /* 第三层：分级补充建议 + 智能采购清单（按需触发） */
+    var purchase = plan.purchase || { triggered: false, mainShort: false, anyGap30: false, items: [] };
+    var tier3Html;
+    if (purchase.triggered) {
+      var triggerNote = "<div class='purchase-trigger'><b>本次自动触发采购建议：</b>" +
+        (purchase.anyGap30 ? "有成员核心营养素缺口超30%（" + (purchase.totalGap40 ? "最严重缺口超40%）" : "优先补齐缺口最大成员）") : "主菜种类不足2道）") +
+        "，按优先级推荐以下食材补位。</div>";
+      var rows = purchase.items.length
+        ? purchase.items.map(function (it) {
+            return "<tr><td class='pri'><span class='pri-badge " + it.level + "'>" + it.rank + "·" + escapeHtml(it.levelText) + "</span></td>" +
+              "<td><div class='purchase-food'>" + escapeHtml(it.food) + "</div></td>" +
+              "<td>" + escapeHtml(it.nutriLabel || "") + "</td>" +
+              "<td>" + escapeHtml(it.amount) + "</td>" +
+              "<td>" + escapeHtml(it.who || "-") + "</td>" +
+              "<td>" + it.gapPct + "%</td></tr>";
+          }).join("")
+        : "<tr><td colspan='6' style='color:var(--ink-3);text-align:center'>现有食材已能覆盖基础营养，暂无高优先级采购项（可下顿再补）。</td></tr>";
+      tier3Html =
+        '<div class="plan-tier"><div class="plan-tier-head"><span class="tno">3</span><h3>分级补充建议 + 智能采购清单</h3><span class="tsub">按需触发 · 缺口超30% 或 主菜不足2道</span></div>' +
+        '<div class="plan-tier-body"><div class="purchase-box">' +
+        triggerNote +
+        '<div class="purchase-table-wrap"><table class="purchase-table"><thead><tr><th>优先级</th><th>建议采购食材</th><th>补充营养素</th><th>建议采购量</th><th>优先补齐成员</th><th>缺口比例</th></tr></thead><tbody>' + rows + "</tbody></table></div>" +
+        '<div class="purchase-actions"><button class="btn btn--export" type="button" data-action="export-purchase"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>一键导出采购清单（本地表格）</button>' +
+        '<span style="font-size:12px;color:var(--ink-3)">采购量按家庭成员数与缺口幅度估算，可按实际调整。</span></div>' +
+        "</div></div></div>";
+    } else {
+      tier3Html =
+        '<div class="plan-tier"><div class="plan-tier-head"><span class="tno">3</span><h3>分级补充建议</h3><span class="tsub">按需触发 · 当前无需采购</span></div>' +
+        '<div class="plan-tier-body"><div class="purchase-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="17" height="17" style="flex:none;margin-top:1px"><path d="m5 13 4 4L19 7"/></svg><span>现有食材已覆盖全家基础营养需求（成员核心营养素缺口均未超30%），主菜数量充足，<b>无需补充采购</b>。系统仍会记录本餐数据，用于周度营养分析。</span></div></div></div>';
+    }
+
+    tiersBox.innerHTML =
+      '<div class="plan-tier"><div class="plan-tier-head"><span class="tno">1</span><h3>全家共享菜品清单</h3><span class="tsub">主菜 ' + plan.mainCount + " 道 · 全部来自现有食材</span></div>" +
+      '<div class="plan-tier-body"><div class="dish-grid">' + dishCards + "</div>" + tierHtml + "</div></div>" +
+      '<div class="plan-tier"><div class="plan-tier-head"><span class="tno">2</span><h3>每人食用分配与营养评估</h3><span class="tsub">摄入优点 + 营养缺口</span></div>' +
+      '<div class="plan-tier-body member-grid">' + memberCards + "</div></div>" +
+      tier3Html +
+      noteHtml;
+
+    var resultEl = document.getElementById("plan-result");
+    if (resultEl && !noScroll) resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    renderFeedbackProbe(plan);
+  }
+
+  /* ---------- 了解产品 · 真实引擎演示（独立容器，不污染正式结果区） ---------- */
+  var DEMO_MEMBERS = [
+    { id: "demo-papa", name: "爸爸", role: "adult", traits: ["muscle"], health: [], constitution: ["cold"], allergies: [] },
+    { id: "demo-mama", name: "妈妈", role: "pregnant", traits: ["pregnant"], health: [], constitution: [], allergies: [] },
+    { id: "demo-baby", name: "宝宝", role: "baby", traits: ["baby-food"], health: [], constitution: [], allergies: [] },
+    { id: "demo-yeye", name: "爷爷", role: "elders", traits: [], health: ["hypertension"], constitution: ["qi-deficiency"], allergies: [] }
+  ];
+  var DEMO_INGS = ["鸡胸肉", "排骨", "豆腐", "西兰花", "冬瓜", "菠菜", "鸡蛋", "大米"];
+
+  function renderDemoPlan(plan) {
+    var box = document.getElementById("demo-live");
+    if (!box) return;
+    box.classList.add("show");
+
+    var dishCards = plan.dishes.map(function (d) {
+      return '<div class="dish-card"><div class="d-name">' + escapeHtml(d.name) + "</div>" +
+        '<div class="d-desc">' + escapeHtml(d.desc) + "</div>" +
+        '<span class="d-method">' + escapeHtml(d.method) + "</span>" +
+        (d.tags ? '<div class="d-tags"><b>' + escapeHtml(d.tags) + "</b></div>" : "") + "</div>";
+    }).join("");
+
+    var staple = plan.dishes.filter(function (d) { return d.stapled; })[0];
+    var tierHtml = "";
+    if (staple && staple.tiers) {
+      tierHtml = "<div class='staple-tiers'><h4>主食分档</h4>" + staple.tiers.map(function (t) {
+        return "<div class='tier-item'><b>" + escapeHtml(t.name) + "</b> · " + escapeHtml(t.who) + "<span>" + escapeHtml(t.desc) + "</span></div>";
+      }).join("") + "</div>";
+    }
+
+    var memberCards = plan.members.map(function (mp) {
+      var m = mp.member || {};
+      var portionHtml = mp.portionText
+        ? "<p><b>分餐：</b>" + escapeHtml(mp.portionText) + "</p>"
+        : (mp.portions && mp.portions.length ? "<p><b>分餐：</b>" + mp.portions.map(function (p) {
+            return escapeHtml(p.dishName) + " " + Math.round(p.ratio * 100) + "%" + escapeHtml(p.note || "");
+          }).join(" · ") + "</p>" : "");
+      var plusHtml = "<div class='plus'><h4>摄入优点</h4><ul>" + (mp.plus || []).map(function (t) { return "<li>" + escapeHtml(t) + "</li>"; }).join("") + "</ul></div>";
+      var gapSource = (mp.gaps && mp.gaps.length) ? mp.gaps : (mp.gapsText || []);
+      var gapHtml = "<div class='gap'><h4>营养缺口</h4><ul>" + gapSource.map(function (g) {
+          if (g.note) return "<li>" + escapeHtml(g.note) + "</li>";
+          return "<li>" + escapeHtml(g.label) + "：摄入约" + g.pct + "%，缺口约" + g.gapPct + "%（参考量" + g.rda + g.unit + "）</li>";
+        }).join("") + "</ul></div>";
+      return '<div class="member-plan"><h4>' + escapeHtml(m.name || "成员") + "</h4>" + portionHtml + plusHtml + gapHtml + "</div>";
+    }).join("");
+
+    var purchase = plan.purchase || { triggered: false, mainShort: false, anyGap30: false, items: [] };
+    var tier3Html;
+    if (purchase.triggered) {
+      var triggerNote = "<div class='purchase-trigger'><b>本次自动触发采购建议：</b>" +
+        (purchase.anyGap30 ? "有成员核心营养素缺口超30%，按优先级推荐以下食材补位。" : "主菜种类不足2道，按优先级推荐以下食材补位。") +
+        "</div>";
+      var rows = purchase.items.length
+        ? purchase.items.map(function (it) {
+            return "<tr><td class='pri'><span class='pri-badge " + it.level + "'>" + it.rank + "·" + escapeHtml(it.levelText) + "</span></td>" +
+              "<td><div class='purchase-food'>" + escapeHtml(it.food) + "</div></td>" +
+              "<td>" + escapeHtml(it.nutriLabel || "") + "</td>" +
+              "<td>" + escapeHtml(it.amount) + "</td>" +
+              "<td>" + escapeHtml(it.who || "-") + "</td>" +
+              "<td>" + it.gapPct + "%</td></tr>";
+          }).join("")
+        : "<tr><td colspan='6' style='color:var(--ink-3);text-align:center'>暂无高优先级采购项。</td></tr>";
+      tier3Html =
+        '<div class="plan-tier"><div class="plan-tier-head"><span class="tno">3</span><h3>分级补充建议 + 智能采购清单</h3><span class="tsub">按需触发</span></div>' +
+        '<div class="plan-tier-body"><div class="purchase-box">' + triggerNote +
+        '<div class="purchase-table-wrap"><table class="purchase-table"><thead><tr><th>优先级</th><th>建议采购食材</th><th>补充营养素</th><th>建议采购量</th><th>优先补齐成员</th><th>缺口比例</th></tr></thead><tbody>' + rows + "</tbody></table></div>" +
+        '</div></div></div>';
+    } else {
+      tier3Html =
+        '<div class="plan-tier"><div class="plan-tier-head"><span class="tno">3</span><h3>分级补充建议</h3><span class="tsub">按需触发 · 当前无需采购</span></div>' +
+        '<div class="plan-tier-body"><div class="purchase-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="17" height="17" style="flex:none;margin-top:1px"><path d="m5 13 4 4L19 7"/></svg><span>现有食材已覆盖全家基础营养需求，<b>无需补充采购</b>。</span></div></div></div>';
+    }
+
+    box.innerHTML =
+      '<span class="demo-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>演示 · 真实引擎生成</span>' +
+      '<div class="plan-tier"><div class="plan-tier-head"><span class="tno">1</span><h3>全家共享菜品清单</h3><span class="tsub">主菜 ' + plan.mainCount + " 道 · 全部来自现有食材</span></div>" +
+      '<div class="plan-tier-body"><div class="dish-grid">' + dishCards + "</div>" + tierHtml + "</div></div>" +
+      '<div class="plan-tier"><div class="plan-tier-head"><span class="tno">2</span><h3>每人食用分配与营养评估</h3><span class="tsub">摄入优点 + 营养缺口</span></div>' +
+      '<div class="plan-tier-body member-grid">' + memberCards + "</div></div>" +
+      tier3Html +
+      '<p class="plan-note">以上输出由与正式生成完全相同的引擎实时计算（非预置文案），面向示例家庭档案。去正式生成请在下方录入你自己的家庭与食材。</p>' +
+      '<div style="margin-top:16px"><button class="btn btn--primary btn-icon" type="button" data-action="scroll-family"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>去正式生成 · 建立我的家庭档案</button></div>';
+    window.__DEMO_PLAN__ = plan;
+    box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  var demoRunBtn = document.getElementById("demo-run-btn");
+  if (demoRunBtn) {
+    demoRunBtn.addEventListener("click", function () {
+      demoRunBtn.disabled = true;
+      demoRunBtn.classList.add("btn--busy");
+      demoRunBtn.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>引擎计算中…';
+      window.setTimeout(function () {
+        try {
+          var plan = buildPlan(DEMO_MEMBERS.slice(), DEMO_INGS.slice());
+          renderDemoPlan(plan);
+        } catch (err) {
+          var box = document.getElementById("demo-live");
+          if (box) {
+            box.classList.add("show");
+            box.innerHTML = '<p class="demo-live-note">演示引擎执行失败：' + escapeHtml(String(err && err.message || err)) + "</p>";
+          }
+        }
+        demoRunBtn.disabled = false;
+        demoRunBtn.classList.remove("btn--busy");
+        demoRunBtn.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3Z"/></svg>用真实引擎演示一次';
+      }, 700);
+    });
+  }
+
+  /* ================= T6 反馈优化 + 每周营养报告 ================= */
+  /* 周度反馈记录（内存态，T7 统一持久化）：[{ date, memberId, memberName, meals:[{dishName, ratio}], purchased:[..] }] */
+  var feedbackLog = [];
+
+  function fmtDate(d) {
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function weekStartOf(d) {
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var day = x.getDay() === 0 ? 7 : x.getDay(); // 周一=1..周日=7
+    x.setDate(x.getDate() - (day - 1));
+    return x;
+  }
+  function isSundayOf(d) {
+    return d.getDay() === 0;
+  }
+
+  /* 渲染反馈探测卡片：每个可制作菜品一行，勾选制作并选各成员食用分量 */
+  function renderFeedbackProbe(plan) {
+    var card = document.getElementById("fb-card");
+    if (!card) return;
+    // 反馈卡覆盖所有实际制作菜品（含主食分档，便于周报统计碳水/能量）
+    var mainDishes = (plan.dishes || []).filter(function (d) { return true; });
+    var members = plan.members && plan.members.length ? plan.members : [];
+    if (!mainDishes.length || !members.length) { card.style.display = "none"; return; }
+
+    var membersMeta = members.map(function (mp) {
+      var m = mp.member || { name: "成员" };
+      return { id: mp.memberId || m.id || m.name, name: m.name || "成员" };
+    });
+
+    var STEPS = [0, 25, 50, 75, 100, 125, 150];
+      function nearestStep(v) {
+        var best = STEPS[0], dist = Math.abs(STEPS[0] - v);
+        STEPS.forEach(function (s) {
+          var dv = Math.abs(s - v);
+          if (dv < dist) { dist = dv; best = s; }
+        });
+        return best;
+      }
+      var rows = mainDishes.map(function (d, di) {
+        var sel = membersMeta.map(function (m) {
+          var p = memberPortionOf(plan, mpOf(plan, m.id), d.id);
+          var def = p ? nearestStep(Math.round(p * 100)) : 0; // 方案未分配的菜默认不吃
+          return '<select class="fb-ratio" data-dish="' + di + '" data-member="' + escapeHtml(m.id) + '" aria-label="' + escapeHtml(m.name) + " 食用分量\">" +
+            STEPS.map(function (v) {
+              return "<option value='" + v + "'" + (v === def ? " selected" : "") + ">" + v + "%</option>";
+            }).join("") + "</select>";
+        }).join("");
+        return '<div class="fb-dish-row" data-di="' + di + '">' +
+          '<label><input type="checkbox" class="fb-made" data-dish="' + di + '" checked> ' + escapeHtml(d.name) + '</label>' +
+          '<span class="dish-meta">' + escapeHtml(d.tags || d.method || "") + "</span>" +
+          '<span class="fb-ratios">' + sel + "</span></div>";
+      }).join("");
+
+    document.getElementById("fb-dishes").innerHTML =
+      '<div class="fb-members" style="font-size:12px;color:var(--ink-3);margin-bottom:4px">成员分量按行内下拉选择（默认按方案分餐比例）</div>' + rows;
+    card.style.display = "";
+    document.getElementById("weekly-card").style.display = "";
+  }
+
+  function mpOf(plan, id) {
+    return (plan.members || []).filter(function (mp) {
+      var m = mp.member || {};
+      return (mp.memberId || m.id || m.name) === id;
+    })[0];
+  }
+
+  /* 该成员对该菜品的方案分餐比例（如无则返回 null） */
+  function memberPortionOf(plan, mp, dishId) {
+    if (!mp || !mp.portions || !mp.portions.length) return null;
+    var p = mp.portions.filter(function (x) { return x.dishId === dishId || x.dishName === dishNameOf(plan, dishId); })[0];
+    return p ? p.ratio : null;
+  }
+  function dishNameOf(plan, dishId) {
+    var d = (plan.dishes || []).filter(function (x) { return x.id === dishId; })[0];
+    return d ? d.name : "";
+  }
+
+  /* 保存反馈：统计实际制作菜品与各成员食用分量，完成营养计入 */
+  function saveFeedback() {
+    var plan = window.__LAST_PLAN__;
+    if (!plan) { toast("请先生成当日方案", "warn"); return; }
+    var rows = document.querySelectorAll("#fb-dishes .fb-dish-row");
+    var dishByName = {};
+    (plan.dishes || []).forEach(function (d) { dishByName[d.name] = d; });
+    var meals = [];
+    rows.forEach(function (row) {
+      var made = row.querySelector(".fb-made").checked;
+      var name = row.querySelector("label").textContent.replace(/^\s+|\s+$/g, "");
+      var dish = dishByName[name];
+      if (!made || !dish) return;
+      var ratios = {};
+      row.querySelectorAll(".fb-ratio").forEach(function (sel) {
+        ratios[sel.getAttribute("data-member")] = parseInt(sel.value, 10) / 100;
+      });
+      meals.push({ dishName: name, ings: dish.ings || [], ratios: ratios });
+    });
+    var purchasedStr = (document.getElementById("fb-purchase").value || "").replace(/[，]/g, "、");
+    var purchased = purchasedStr.split(/[、,]/).map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!meals.length) { toast("请至少勾选一道实际制作的菜品", "warn"); return; }
+
+    // 按成员聚合本餐实际摄入（菜品营养 × 分餐比例 × 分量）
+    var memberIntake = {};
+    (plan.members || []).forEach(function (mp) {
+      var m = mp.member || {};
+      var id = mp.memberId || m.id || m.name;
+      memberIntake[id] = { name: m.name || "成员", intake: { protein: 0, fat: 0, carb: 0, kcal: 0, vA: 0, ca: 0, fe: 0, na: 0, fiber: 0 } };
+    });
+    var dishNut = {};
+    meals.forEach(function (ml) {
+      var n = dishNutritionDish(ml.ings);
+      Object.keys(ml.ratios).forEach(function (mid) {
+        var r = ml.ratios[mid];
+        if (!memberIntake[mid]) return;
+        var t = memberIntake[mid].intake;
+        Object.keys(n).forEach(function (k) { t[k] += n[k] * r; });
+      });
+    });
+
+    var entry = {
+      date: fmtDate(new Date()),
+      purchased: purchased,
+      meals: meals,
+      memberIntake: memberIntake
+    };
+    feedbackLog.push(entry);
+    LS.set("feedbackLog", feedbackLog);  // T7 持久化反馈记录
+    document.getElementById("fb-tip").textContent = "已计入本餐（" + entry.date + "），本周累计 " + feedbackLog.length + " 餐。";
+    toast("反馈已计入周度统计");
+    renderWeeklyHint();
+  }
+
+  /* 菜品营养合计（供反馈统计复用；与引擎算法一致） */
+  function dishNutritionDish(ings) {
+    var n = { protein: 0, fat: 0, carb: 0, kcal: 0, vA: 0, ca: 0, fe: 0, na: 0, fiber: 0 };
+    (ings || []).forEach(function (pair) {
+      var d = FOOD_DB[pair[0]]; if (!d) return;
+      Object.keys(n).forEach(function (k) {
+        if (d[k] !== undefined) n[k] += d[k] * pair[1] / 100;
+      });
+    });
+    return n;
+  }
+
+  function renderWeeklyHint() {
+    var card = document.getElementById("weekly-card");
+    if (card) card.style.display = "";
+    var tip = document.getElementById("weekly-tip");
+    if (tip) tip.textContent = "本周已记录 " + feedbackLog.length + " 餐 · 最近计入：" + (feedbackLog.length ? fmtDate(new Date()) : "—");
+  }
+
+  /* 生成本周营养报告：达标率/累计缺口/超标项 + 本周问题总结 + 下周调整方向 */
+  function generateWeeklyReport() {
+    var box = document.getElementById("weekly-report");
+    if (!box) return;
+    var memberRDA_CACHE = {};
+    function rdaOf(m) { return memberRDA(m); }
+
+    var weekStart = weekStartOf(new Date());
+    var entries = feedbackLog.filter(function (e) { return e.date >= fmtDate(weekStart); });
+    if (!entries.length) {
+      box.innerHTML = '<div class="weekly-empty">本周（' + fmtDate(weekStart) + " 起）暂无已计入的用餐反馈。<br>先生成方案并在「反馈优化」中标记实际制作菜品与食用分量，数据会自动累计到周报。</div>";
+      return;
+    }
+
+    // 聚合每位成员的营养素总量
+    var agg = {};
+    var memberMeta = {};
+    entries.forEach(function (e) {
+      Object.keys(e.memberIntake || {}).forEach(function (mid) {
+        var mi = e.memberIntake[mid];
+        if (!agg[mid]) agg[mid] = { protein: 0, fat: 0, carb: 0, kcal: 0, vA: 0, ca: 0, fe: 0, na: 0, fiber: 0 };
+        if (!memberMeta[mid]) memberMeta[mid] = mi.name;
+        Object.keys(agg[mid]).forEach(function (k) { agg[mid][k] += mi.intake[k]; });
+      });
+    });
+
+    // RDA：若当前档案有该成员则用其 RDA（餐级），周累计目标 = RDA × 本周记录餐数
+    var family = getFamilyMembers();
+    var memberRdas = {};
+    family.forEach(function (m) {
+      memberRdas[m.id || m.name] = m;
+    });
+
+    var nutriKeys = ["protein", "carb", "fat", "kcal", "vA", "ca", "fe", "na", "fiber"];
+    var summaryProblems = [];
+    var summaryAdvice = [];
+    var naOver = [];
+    var html = "";
+    Object.keys(agg).forEach(function (mid) {
+      var name = memberMeta[mid] || "成员";
+      var m = memberRdas[mid] || { name: name, role: "adult", health: [], constitution: [] };
+      var rda = rdaOf(m);
+      var target = {};
+      nutriKeys.forEach(function (k) {
+        target[k] = (rda[k] || 0) * entries.length;
+      });
+
+      var rows = "";
+      nutriKeys.forEach(function (k) {
+        var act = Math.round(agg[mid][k]);
+        var tgt = Math.round(target[k]);
+        var pct = tgt > 0 ? Math.round(agg[mid][k] / target[k] * 100) : 0;
+        var barPct = Math.min(100, pct);
+        var barClass = pct >= 120 ? "over" : (pct < 70 ? "low" : "");
+        var pill;
+        if (pct >= 120) pill = '<span class="wr-pill over">超标 +' + (pct - 100) + "%</span>";
+        else if (pct < 70) pill = '<span class="wr-pill low">缺口 ' + (100 - pct) + "%</span>";
+        else pill = '<span class="wr-pill ok">达标</span>';
+        var gapAmt = tgt > act ? (tgt - act) : 0;
+        // 钠是限量营养素：缺口不推荐补充，仅超标时提示
+        var gapText = "—";
+        if (k !== "na" && gapAmt > 0) gapText = "累计缺口约" + Math.round(gapAmt) + NUTRI_UNIT[k];
+        rows += "<tr><td>" + NUTRI_LABEL[k] + "</td><td>" + act + NUTRI_UNIT[k] + " / " + tgt + NUTRI_UNIT[k] +
+          "</td><td><span class='wr-bar'><i class='" + barClass + "' style='width:" + barPct + "%'></i></span>" + pct + "%</td><td>" + pill + "</td><td>" + gapText + "</td></tr>";
+        if (k === "na" && pct > 100) naOver.push({ name: name, pct: pct });
+      });
+
+      // 累计缺口最大项 -> 建议（钠除外，限量营养素不作补充建议）
+      var worst = nutriKeys.filter(function (k) { return k !== "na"; }).map(function (k) {
+        return { k: k, gap: Math.max(0, target[k] - agg[mid][k]), pct: target[k] > 0 ? Math.round((target[k] - agg[mid][k]) / target[k] * 100) : 0 };
+      }).filter(function (x) { return x.gap > 0; }).sort(function (a, b) { return b.gap - a.gap; })[0];
+      if (worst) {
+        var foods = (GAP_FOOD[worst.k] || []).slice(0, 2);
+        summaryAdvice.push(name + "：重点补充" + NUTRI_LABEL[worst.k] + "（累计缺口约" +
+          Math.round(worst.gap) + NUTRI_UNIT[worst.k] + "），可增加" +
+          (foods.length ? foods.join("、") : "相应高" + NUTRI_LABEL[worst.k] + "食材") + "。");
+        // 周问题汇总（简要）
+        if (worst.gap > 0) summaryProblems.push(NUTRI_LABEL[worst.k] + "（" + name + " 本周累计缺口约" +
+          Math.round(worst.gap) + NUTRI_UNIT[worst.k] + "）");
+      }
+
+      html += '<div class="wr-member"><div class="wr-member-head">' + escapeHtml(name) + " · 本周累计 " + entries.length + " 餐</div>" +
+        '<div class="wr-table-wrap" style="overflow-x:auto"><table class="wr-table"><thead><tr><th>营养素</th><th>累计摄入 / 本周目标</th><th>达标率</th><th>状态</th><th>累计缺口</th></tr></thead><tbody>' + rows + "</tbody></table></div></div>";
+    });
+
+    if (naOver.length) {
+      var naNames = {};
+      naOver.forEach(function (x) { naNames[x.name] = Math.max(naNames[x.name] || 0, x.pct); });
+      Object.keys(naNames).forEach(function (nm) {
+        summaryProblems.push("钠（" + nm + " 摄入超标，" + (naNames[nm] - 100) + "%）");
+      });
+    }
+    var problemHtml = summaryProblems.length
+      ? "<ul>" + summaryProblems.slice(0, 4).map(function (p) { return "<li><b>" + escapeHtml(p) + "</b></li>"; }).join("") + "</ul>"
+      : "<ul><li>本周各成员营养摄入整体均衡，无显著累计缺口。</li></ul>";
+
+    html =
+      '<div class="wr-summary problem"><h4>本周饮食核心问题总结</h4>' + problemHtml + "</div>" +
+      html +
+      '<div class="wr-advice"><b>下周调整方向：</b>' + escapeHtml(summaryAdvice.join(" ")) + "</div>";
+
+    box.innerHTML = html;
+    var tip = document.getElementById("weekly-tip");
+    if (tip) tip.textContent = "已生成「" + fmtDate(weekStart) + " 起」本周报告 · 数据来自 " + entries.length + " 餐反馈";
+    toast("本周营养报告已生成");
+  }
+
+  /* 每周日自动生成：勾选后，页面加载时若今天是周日且已有本周数据则自动生成 */
+  var weeklyAuto = false;
+  function initWeeklyAuto() {
+    var cb = document.getElementById("weekly-auto");
+    if (!cb) return;
+    cb.checked = weeklyAuto;
+    cb.addEventListener("change", function () {
+      weeklyAuto = cb.checked;
+      LS.set("weeklyAuto", weeklyAuto);  // T7 持久化周报自动生成开关
+    });
+    if (weeklyAuto && isSundayOf(new Date())) {
+      var weekStart = weekStartOf(new Date());
+      var hasData = feedbackLog.some(function (e) { return e.date >= fmtDate(weekStart); });
+      if (hasData) window.setTimeout(generateWeeklyReport, 300);
+    }
+  }
+
+  /* 生成按钮流程 */
+  document.addEventListener("click", function (ev) {
+    var exportBtn = ev.target.closest("[data-action='export-purchase']");
+    if (exportBtn) {
+      var lastPlan = window.__LAST_PLAN__;
+      if (!lastPlan || !lastPlan.purchase || !lastPlan.purchase.items.length) { toast("当前没有可导出的采购清单", "warn"); return; }
+      exportPurchaseCsv(lastPlan);
+      return;
+    }
+    var fbBtn = ev.target.closest("[data-action='save-feedback']");
+    if (fbBtn) { saveFeedback(); return; }
+    var wkBtn = ev.target.closest("[data-action='gen-weekly']");
+    if (wkBtn) { generateWeeklyReport(); return; }
+    var genBtn = ev.target.closest("[data-action='generate-plan']");
+    if (!genBtn) return;
+    var members = getFamilyMembers();
+    var ings = pantryItems().map(function (it) { return it.name; });
+    if (!members.length) { toast("请先在「Step 1 家庭档案」添加成员", "warn"); return; }
+    if (!ings.length) { toast("请先在「Step 2 食材录入」录入食材", "warn"); return; }
+
+    var gate = document.getElementById("plan-gate");
+    var loading = document.getElementById("plan-loading");
+    var result = document.getElementById("plan-result");
+    gate.style.display = "none";
+    loading.classList.add("show");
+    result.classList.remove("show");
+
+    window.setTimeout(function () {
+      var plan = buildPlan(members, ings);
+      loading.classList.remove("show");
+      renderPlanResult(plan);
+      window.__LAST_PLAN__ = plan;
+      LS.set("lastPlan", plan);  // T7 持久化最近方案
+    }, 900);
+  });
+
+  /* ---------- T7 本地恢复：重开/刷新页面后载入持久化数据 ---------- */
+  (function hydratePersisted() {
+    // 家庭档案与食材清单已由 createMemoryStore 完成存储恢复，恢复非空则重渲染对应区块
+    if (getFamilyMembers().length) renderFamily();
+    if (pantryItems().length) renderPantry();
+
+    // 反馈记录
+    var savedLog = LS.get("feedbackLog");
+    if (Array.isArray(savedLog) && savedLog.length) feedbackLog = savedLog;
+
+    // 周报自动生成开关
+    var savedAuto = LS.get("weeklyAuto");
+    if (typeof savedAuto === "boolean") weeklyAuto = savedAuto;
+
+    // 最近一次方案（若存在则恢复三层结果视图）
+    var savedPlan = LS.get("lastPlan");
+    if (savedPlan && Array.isArray(savedPlan.dishes) && savedPlan.dishes.length) {
+      window.__LAST_PLAN__ = savedPlan;
+      var gate = document.getElementById("plan-gate");
+      var loading = document.getElementById("plan-loading");
+      var result = document.getElementById("plan-result");
+      if (gate) gate.style.display = "none";
+      if (loading) loading.classList.remove("show");
+      if (result) result.classList.add("show");
+      renderPlanResult(savedPlan, true);
+    }
+
+    if (feedbackLog.length) renderWeeklyHint();
+  })();
+
+  renderPlanCheck();
+  initWeeklyAuto();
+
+  /* T7 供验证脚本读取的存储钩子 */
+  window.__PERSIST_HOOK__ = {
+    get: function (key) { return LS.get(key); },
+    set: function (key, val) { LS.set(key, val); },
+    del: function (key) { LS.del(key); },
+    readRaw: function () {
+      var out = {};
+      try {
+        for (var i = 0; i < window.localStorage.length; i++) {
+          var k = window.localStorage.key(i);
+          if (k && k.indexOf("jiawei_fai_v1_") === 0) out[k] = window.localStorage.getItem(k);
+        }
+      } catch (e) { /* 存储不可用 */ }
+      return out;
+    }
+  };
+
+  window.__PLAN_READY__ = true;
+
+  /* T6 验证钩子 */
+  window.__FEEDBACK_HOOK__ = {
+    count: function () { return feedbackLog.length; },
+    genWeekly: generateWeeklyReport,
+    save: saveFeedback,
+    auto: function () { return weeklyAuto; },
+    isSunday: isSundayOf,
+  };
+
+  /* 供验证脚本读取的运行信息 */
+  window.__APP_READY__ = true;
+})();
+</script>
+</body>
+</html>
